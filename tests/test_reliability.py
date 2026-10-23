@@ -39,3 +39,24 @@ class ReliabilityTests(unittest.TestCase):
         self.assertEqual(spread.iloc[0].best_engine, 2)
         self.assertEqual(spread.iloc[0].worst_engine, 1)
         self.assertEqual(spread.iloc[0].engine_mae_std, 1.25)
+
+    def test_rul_boundaries_counts_and_empty_bands(self):
+        from aevora.reliability import grouped_errors
+        frame = pd.DataFrame({'unit_id': [1]*5, 'cycle': [20, 50, 51, 100, 101],
+                              'rul': [0., 30., 31., 100., 101.], 'predicted_rul': [1., 31., 32., 101., 102.]})
+        groups = grouped_errors({'model': frame})
+        self.assertEqual(groups.observations.tolist(), [2, 2, 1, 2, 2, 1])
+        self.assertEqual(groups.mean_signed_error.tolist(), [1.] * 6)
+        empty = grouped_errors({'model': frame.iloc[:1]})
+        self.assertTrue(pd.isna(empty.iloc[1].mae))
+        self.assertEqual(empty.iloc[1].engines, 0)
+
+    def test_tables_preserve_alignment_and_rank_extremes(self):
+        from aevora.reliability import build_tables
+        frames = {'gradient_boosting': example(), 'other': example()}
+        result = build_tables(frames)
+        self.assertEqual(result['largest_errors'].iloc[0].cycle, 21)
+        self.assertEqual(result['per_engine'].last_observed_cycle.tolist(), [21, 20, 21, 20])
+        frames['other'] = example().iloc[::-1]
+        with self.assertRaisesRegex(ValueError, 'alignment'):
+            build_tables(frames)

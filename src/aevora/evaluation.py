@@ -21,15 +21,20 @@ def align_predictions(reference, candidate):
     metrics(reference.rul.to_numpy(), candidate.predicted_rul.to_numpy())
 
 
+def rul_band_masks(frame):
+    """Shared Phase 4–6 target bands; masks preserve exact observation membership."""
+    return [("near_failure_0_30", frame.rul <= 30),
+            ("middle_31_100", (frame.rul > 30) & (frame.rul <= 100)),
+            ("early_over_100", frame.rul > 100)]
+
+
 def error_tables(frame):
     """Near failure [0,30], middle (30,100], early (100,infinity), in cycles."""
     engines, bands = [], []
     for unit, group in frame.groupby("unit_id", sort=True):
         engines.append({"unit_id": int(unit), "observations": len(group),
                         **metrics(group.rul.to_numpy(), group.predicted_rul.to_numpy())})
-    for name, mask in [("near_failure_0_30", frame.rul <= 30),
-                       ("middle_31_100", (frame.rul > 30) & (frame.rul <= 100)),
-                       ("early_over_100", frame.rul > 100)]:
+    for name, mask in rul_band_masks(frame):
         group = frame[mask]
         bands.append({"band": name, "observations": len(group),
                       "engines": int(group.unit_id.nunique()),

@@ -71,3 +71,41 @@ def engine_variability(per_engine):
                      'best_engine': int(group.sort_values(['mae', 'unit_id']).iloc[0].unit_id),
                      'worst_engine': int(group.sort_values(['mae', 'unit_id'], ascending=[False, True]).iloc[0].unit_id)})
     return pd.DataFrame(rows)
+
+
+def grouped_errors(frames):
+    """Target bands are retrospective; cycle bands describe history available at prediction."""
+    from .evaluation import rul_band_masks
+    rows = []
+    for name, frame in frames.items():
+        validate_predictions(frame)
+        for group_type, masks in [('rul', rul_band_masks(frame)),
+                                 ('available_cycles', [('up_to_50', frame.cycle <= 50),
+                                                       ('51_100', (frame.cycle > 50) & (frame.cycle <= 100)),
+                                                       ('over_100', frame.cycle > 100)])]:
+            for band, mask in masks:
+                rows.append({'model': name, 'group_type': group_type, 'band': band,
+                             **describe_errors(frame[mask])})
+    return pd.DataFrame(rows)
+
+
+def build_tables(frames):
+    from .evaluation import align_predictions
+    if not frames or 'gradient_boosting' not in frames or frames['gradient_boosting'].empty:
+        raise ValueError('Nonempty boosted-tree predictions are required')
+    reference = frames['gradient_boosting']
+    for frame in frames.values():
+        validate_predictions(frame)
+        align_predictions(reference, frame)
+    engines = engine_metrics(frames)
+    history = reference.groupby('unit_id').cycle.agg(first_evaluated_cycle='min', last_observed_cycle='max')
+    engines = engines.merge(history, on='unit_id', validate='many_to_one')
+    worst = []
+    for name, frame in frames.items():
+        errors = frame.assign(model=name, residual=frame.predicted_rul - frame.rul,
+                              absolute_error=(frame.predicted_rul - frame.rul).abs())
+        top = errors.sort_values(['absolute_error', 'unit_id', 'cycle'], ascending=[False, True, True]).head(20)
+        worst.append(top.assign(error_rank=range(1, len(top) + 1)))
+    return {'model_metrics': pd.DataFrame([{'model': name, **describe_errors(frame)} for name, frame in frames.items()]),
+            'per_engine': engines, 'engine_variability': engine_variability(engines),
+            'grouped_errors': grouped_errors(frames), 'largest_errors': pd.concat(worst, ignore_index=True)}
