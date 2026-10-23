@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import Ridge
+from sklearn.ensemble import HistGradientBoostingRegressor
 from .classical import Predictor, summarize
 from .config import load_config
 from .data.labels import training_rul
@@ -89,6 +90,13 @@ def candidates(name, settings):
         # Small regularization sweep anchored to the central configuration.
         alphas = sorted(set(settings.models["ridge"]["alpha"] * factor for factor in (1, 10, 100)))
         return [Ridge(alpha=alpha, solver="svd") for alpha in alphas]
+    if name == "gradient_boosting":
+        parameters = dict(settings.models[name])
+        leaves = parameters.pop("max_leaf_nodes")
+        # Fixed iteration budget avoids an internal random split of overlapping windows.
+        return [HistGradientBoostingRegressor(**parameters, max_leaf_nodes=n,
+                    early_stopping=False, random_state=settings.random_seed)
+                for n in sorted(set([max(2, leaves // 2), leaves]))]
     raise ValueError(f"Unsupported model: {name}")
 
 
@@ -138,7 +146,7 @@ def train_model(settings, name, prepared=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", required=True)
-    parser.add_argument("--model", choices=["baseline", "ridge"], required=True)
+    parser.add_argument("--model", choices=["baseline", "ridge", "gradient_boosting"], required=True)
     args = parser.parse_args()
     print(json.dumps(train_model(load_config(args.config), args.model), indent=2))
 
