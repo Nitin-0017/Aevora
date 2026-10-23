@@ -68,8 +68,10 @@ export function Bars({
 }
 export function SensorChart({
   data,
+  sensor = "Sensor reading",
 }: {
   data: { cycle: number; value: number }[];
+  sensor?: string;
 }) {
   return (
     <div
@@ -87,6 +89,12 @@ export function SensorChart({
           />
           <YAxis
             domain={["auto", "auto"]}
+            label={{
+              value: sensor,
+              angle: -90,
+              position: "insideLeft",
+              fill: ink,
+            }}
             stroke={ink}
             tick={{ fontSize: 11 }}
           />

@@ -118,43 +118,80 @@ async function browserTest(callback: (host: HTMLElement) => Promise<void>) {
 }
 test("fleet API response, demo disclosure and engine selection render correctly", async () =>
   browserTest(async (host) => {
-    globalThis.fetch = async (url) =>
-      ({
+    let requests = 0;
+    globalThis.fetch = async (url) => {
+      if (String(url) === "/api/fleet-predictions") requests++;
+      return {
         ok: true,
         json: async () =>
-          String(url) === "/api/engines"
+          String(url).includes("/history?")
             ? {
-                engines: [
-                  { engine_id: 3, available_cycles: 150 },
-                  { engine_id: 5, available_cycles: 170 },
-                ],
-                sensors: ["sensor_2"],
-                min_cycle: 20,
-                max_cycle: 170,
-                disclosure: DISCLOSURE,
+                engine_id: 3,
+                sensor: "sensor_2",
+                units: "dataset",
+                readings: [],
               }
-            : String(url) === "/api/models"
-              ? { models: [{ id: "baseline", name: "Median baseline" }] }
-              : {
-                  predictions: [
-                    prediction,
-                    {
-                      ...prediction,
-                      engine_id: 5,
-                      raw_rul: -2,
-                      valid: false,
-                      status: "Unable to assess",
-                      level: "invalid",
-                    },
+            : String(url) === "/api/engines"
+              ? {
+                  engines: [
+                    { engine_id: 3, available_cycles: 150 },
+                    { engine_id: 5, available_cycles: 170 },
                   ],
-                  generated_at: prediction.generated_at,
+                  sensors: ["sensor_2"],
+                  min_cycle: 20,
+                  max_cycle: 170,
                   disclosure: DISCLOSURE,
-                },
-      }) as Response;
+                }
+              : String(url) === "/api/models"
+                ? { models: [{ id: "baseline", name: "Median baseline" }] }
+                : {
+                    predictions: [
+                      prediction,
+                      {
+                        ...prediction,
+                        engine_id: 5,
+                        raw_rul: -2,
+                        valid: false,
+                        status: "Unable to assess",
+                        level: "invalid",
+                      },
+                    ],
+                    generated_at: prediction.generated_at,
+                    disclosure: DISCLOSURE,
+                  },
+      } as Response;
+    };
     const root = createRoot(host);
     try {
       await act(async () => root.render(<App />));
       assert.ok(host.textContent?.includes(DISCLOSURE));
+      const before = requests;
+      const run = Array.from(host.querySelectorAll("button")).find((b) =>
+        b.textContent?.includes("Run prediction"),
+      );
+      assert.ok(run);
+      await act(async () => run.click());
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      assert.equal(requests, before + 1);
+      const selector = host.querySelector(
+        'select[aria-label="Select engine"]',
+      ) as HTMLSelectElement;
+      await act(async () => {
+        selector.value = "5";
+        selector.dispatchEvent(new window.Event("change", { bubbles: true }));
+      });
+      assert.match(
+        host.querySelector(".engine-information")?.textContent ??
+          host.textContent ??
+          "",
+        /Unable to assess/,
+      );
+      await act(async () => {
+        selector.value = "3";
+        selector.dispatchEvent(new window.Event("change", { bubbles: true }));
+      });
       assert.match(host.textContent ?? "", /95\.00/);
       const select = host.querySelector(
         'button[aria-label="Select engine 5"]',
@@ -163,7 +200,7 @@ test("fleet API response, demo disclosure and engine selection render correctly"
       await act(async () => select.click());
       assert.match(
         host.querySelector(".health-card")?.textContent ?? "",
-        /Engine 005/,
+        /Engine 5/,
       );
       assert.match(
         host.querySelector(".health-card")?.textContent ?? "",
@@ -194,3 +231,29 @@ test("initial loading and backend failure do not invent fleet values", async () 
       await act(async () => root.unmount());
     }
   }));
+
+test("client rejects malformed history and non-finite prediction responses", async () => {
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () =>
+      ({
+        ok: true,
+        json: async () => ({ readings: [{ cycle: 1, value: null }] }),
+      }) as Response;
+    await assert.rejects(
+      request("/api/engines/3/history?cycle=100"),
+      /invalid sensor history/,
+    );
+    globalThis.fetch = async () =>
+      ({
+        ok: true,
+        json: async () => ({ predictions: [{ ...prediction, raw_rul: NaN }] }),
+      }) as Response;
+    await assert.rejects(
+      request("/api/predict"),
+      /invalid prediction response/,
+    );
+  } finally {
+    globalThis.fetch = original;
+  }
+});

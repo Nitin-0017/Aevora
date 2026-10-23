@@ -111,6 +111,41 @@ export async function request<T>(
     );
   if (data === null)
     throw new Error("The API returned an unreadable response. Please retry.");
+  if (
+    url.includes("/history?") &&
+    (!Array.isArray(data.readings) ||
+      !data.readings.every(
+        (row: { cycle: unknown; value: unknown }) =>
+          row &&
+          typeof row.cycle === "number" &&
+          Number.isFinite(row.cycle) &&
+          typeof row.value === "number" &&
+          Number.isFinite(row.value),
+      ))
+  ) {
+    throw new Error(
+      "The API returned invalid sensor history. Check the backend data.",
+    );
+  }
+  if (
+    (url === "/api/fleet-predictions" || url === "/api/predict") &&
+    (!Array.isArray(data.predictions) ||
+      !data.predictions.every(
+        (row: Prediction) =>
+          row &&
+          Number.isInteger(row.engine_id) &&
+          typeof row.raw_rul === "number" &&
+          Number.isFinite(row.raw_rul) &&
+          typeof row.valid === "boolean" &&
+          row.model in MODEL_LABELS &&
+          Number.isInteger(row.latest_cycle) &&
+          Number.isFinite(Date.parse(row.generated_at)),
+      ))
+  ) {
+    throw new Error(
+      "The API returned an invalid prediction response. Unable to assess.",
+    );
+  }
   return data as T;
 }
 export function hoursFromCycles(

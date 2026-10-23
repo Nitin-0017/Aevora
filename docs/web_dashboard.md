@@ -115,3 +115,21 @@ For manual verification, open all four pages, switch engines/models/sensors,
 change the replay cutoff, confirm cycles-only output without a rate, and check
 errors after stopping the backend. Browser appearance must be reviewed locally
 when the execution environment blocks server ports.
+
+## Reference overview layout
+
+The overview follows the supplied reference: engine/model controls and Run
+prediction, a prominent status/RUL card, an illustrative turbine panel, actual
+sensor history and engine metadata. Fleet counts and the priority table follow
+these cards. Navigation now includes Data Information and a collapsible mobile
+menu. Run prediction issues a fresh backend request; changing the selected engine
+updates its card and sensor request. Rounded whole cycles and the raw output to
+two decimals are shown separately. Negative outputs remain invalid.
+
+The original silver logo is stored unchanged at
+`frontend/public/assets/aevora-logo.jpg`. The AI-generated turbine illustration is
+stored at `frontend/public/assets/turbofan.png` and explicitly labelled as an
+illustration, not live equipment. Both are bundled locally for offline use. Image
+provenance and the generation prompt are recorded in
+`frontend/public/assets/README.md`. The screenshot's example numbers and
+timestamps are never used as project data.

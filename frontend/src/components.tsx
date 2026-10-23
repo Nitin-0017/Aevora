@@ -72,21 +72,40 @@ export function HealthCard({ prediction }: { prediction: Prediction }) {
     >
       <div className="section-top">
         <span className="eyebrow">
-          SELECTED ENGINE / {String(prediction.engine_id).padStart(3, "0")}
+          Engine {prediction.engine_id} · Latest cycle:{" "}
+          {prediction.latest_cycle}
         </span>
-        <Status
-          value={prediction.status}
-          valid={valid}
-          level={prediction.level}
-        />
+        <span className={`validity ${valid ? "valid" : "invalid"}`}>
+          {valid ? "● Valid prediction" : "● Unable to assess"}
+        </span>
       </div>
       <div className="health-grid">
         <div>
-          <h2>Engine {String(prediction.engine_id).padStart(3, "0")}</h2>
+          <div className="machine-status">
+            <span
+              className={`status-emblem ${valid ? prediction.level : "invalid"}`}
+            >
+              <Info size={38} />
+            </span>
+            <div>
+              <span className="eyebrow">MACHINE STATUS</span>
+              <h2>{valid ? prediction.status : "Unable to assess"}</h2>
+              <p className="muted small">
+                Illustrative demonstration band · not a safety assessment.
+              </p>
+            </div>
+          </div>
           <p className="muted">Estimated remaining useful life</p>
           <div className="rul">
-            {finite ? prediction.raw_rul!.toFixed(2) : "—"}
-            <span>{finite ? "cycles" : "Unavailable"}</span>
+            {finite ? Math.round(prediction.raw_rul!) : "—"}
+            <span>{finite ? "operating cycles" : "Unavailable"}</span>
+            <div className="raw-output">
+              Model output (raw)
+              <strong>
+                {finite ? prediction.raw_rul!.toFixed(2) : "Unavailable"}
+              </strong>
+              <small>cycles · shown to 2 decimals</small>
+            </div>
           </div>
           <p className="muted small">
             Raw model output · rounded to 2 decimals
@@ -96,7 +115,7 @@ export function HealthCard({ prediction }: { prediction: Prediction }) {
         </div>
         <div className="action-box">
           <span className="eyebrow">
-            <ArrowUpRight size={16} /> SUGGESTED NEXT STEP
+            <ArrowUpRight size={16} /> Recommended next step
           </span>
           <h3>
             {valid

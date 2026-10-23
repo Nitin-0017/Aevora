@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import {
   Activity,
-  ArrowRight,
+  Menu,
+  FileText,
   BarChart3,
   BookOpen,
   ChevronRight,
-  Layers3,
+  Home,
   RefreshCw,
   ShieldCheck,
   SlidersHorizontal,
@@ -22,12 +23,19 @@ import {
 import { useRemote } from "./useRemote";
 import { HealthCard, LoadState } from "./components";
 import { SensorChart } from "./charts";
+import {
+  OverviewDetails,
+  DataInformation,
+  BrandAsset,
+  TurbinePanel,
+} from "./Overview";
 import { Comparison, ReliabilityPage } from "./Technical";
 const pages = [
-  { id: "fleet", name: "Fleet overview", icon: Layers3 },
-  { id: "engines", name: "Engine explorer", icon: Activity },
-  { id: "models", name: "Model performance", icon: BarChart3 },
-  { id: "reliability", name: "Reliability insights", icon: ShieldCheck },
+  { id: "fleet", name: "Overview", icon: Home },
+  { id: "engines", name: "Engine Explorer", icon: Activity },
+  { id: "models", name: "Model Comparison", icon: BarChart3 },
+  { id: "reliability", name: "Reliability Insights", icon: ShieldCheck },
+  { id: "data", name: "Data Information", icon: FileText },
 ] as const;
 type Page = (typeof pages)[number]["id"];
 function currentPage(): Page {
@@ -87,7 +95,7 @@ export function EngineExplorer({
           available record.
         </span>
       </div>
-      <LoadState {...history} />
+      <LoadState loading={history.loading} error={history.error} />
       {history.data && (
         <section className="panel">
           <div className="section-top">
@@ -98,7 +106,7 @@ export function EngineExplorer({
               {history.data.readings.length} recorded cycles
             </span>
           </div>
-          <SensorChart data={history.data.readings} />
+          <SensorChart data={history.data.readings} sensor={sensor} />
           <p className="small muted">
             Recorded dataset units. Sensor IDs are shown without invented
             engineering meanings. No causal fault explanation is inferred from
@@ -117,6 +125,7 @@ export function EngineExplorer({
   );
 }
 export default function App() {
+  const [menuOpen, setMenuOpen] = useState(false);
   const [page, setPage] = useState<Page>(currentPage);
   const [model, setModel] = useState<ModelID>("gradient_boosting");
   const [selected, setSelected] = useState(3);
@@ -154,22 +163,29 @@ export default function App() {
       p.raw_rul >= 0,
   ).length;
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${menuOpen ? "menu-open" : ""}`}>
+      <button
+        className="mobile-nav"
+        aria-expanded={menuOpen}
+        aria-controls="main-navigation"
+        onClick={() => setMenuOpen(!menuOpen)}
+      >
+        <Menu size={20} /> Menu
+      </button>
       <aside className="sidebar">
         <a className="brand" href="#/fleet" aria-label="AEVORA home">
-          <div className="brand-symbol">
-            <Activity size={25} />
-          </div>
+          <BrandAsset />
           <div>
             AEVORA<span>Intelligence Before Failure.</span>
           </div>
         </a>
         <div className="nav-label">WORKSPACE</div>
-        <nav>
+        <nav id="main-navigation">
           {pages.map((p) => (
             <a
               key={p.id}
               href={`#/${p.id}`}
+              onClick={() => setMenuOpen(false)}
               aria-current={page === p.id ? "page" : undefined}
               className={page === p.id ? "active" : ""}
             >
@@ -181,12 +197,9 @@ export default function App() {
         </nav>
         <div className="sidebar-note">
           <BookOpen size={20} />
-          <b>Built for informed decisions.</b>
-          <p>
-            Estimates support inspection. They do not replace a qualified
-            technician.
-          </p>
-          <span>FD001 / LOCAL DEMONSTRATION</span>
+          <b>NASA C-MAPSS FD001</b>
+          <p>Demonstration data</p>
+          <p>Not live equipment</p>
         </div>
       </aside>
       <main>
@@ -209,9 +222,10 @@ export default function App() {
                     <div className="eyebrow">
                       OPERATING INSIGHT, BEFORE FAILURE
                     </div>
-                    <h1>A clearer view of remaining life.</h1>
+                    <h1>Machine overview</h1>
                     <p>
-                      Choose an engine. Review its estimate. Know the next step.
+                      Monitor engine condition and estimate remaining useful
+                      life.
                     </p>
                   </>
                 )}
@@ -240,7 +254,21 @@ export default function App() {
                 }}
               >
                 <label>
-                  Saved prediction model
+                  Select engine
+                  <select
+                    aria-label="Select engine"
+                    value={selected}
+                    onChange={(e) => setSelected(Number(e.target.value))}
+                  >
+                    {(engines.data?.engines ?? []).map((engine) => (
+                      <option key={engine.engine_id} value={engine.engine_id}>
+                        Engine {engine.engine_id}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Select model
                   <select
                     value={model}
                     onChange={(e) => setModel(e.target.value as ModelID)}
@@ -274,7 +302,7 @@ export default function App() {
                     size={16}
                     className={fleet.loading ? "spin" : ""}
                   />
-                  {fleet.loading ? "Estimating…" : "Run predictions"}
+                  {fleet.loading ? "Estimating…" : "Run prediction"}
                 </button>
                 <details className="threshold-control">
                   <summary>
@@ -310,7 +338,7 @@ export default function App() {
                   </label>
                   <p className="small muted">
                     Illustrative cycles, not validated safety limits. Apply with
-                    Run predictions.
+                    Run prediction.
                   </p>
                 </details>
               </form>
@@ -327,6 +355,22 @@ export default function App() {
           )}
           {page === "fleet" && engines.data && fleet.data && (
             <>
+              <div className="fleet-grid">
+                <div>
+                  {prediction ? (
+                    <HealthCard key={selected} prediction={prediction} />
+                  ) : (
+                    <LoadState empty />
+                  )}
+                </div>
+                <TurbinePanel />
+              </div>
+              <OverviewDetails
+                engines={engines.data}
+                selected={selected}
+                cycle={settings.cycle}
+                prediction={prediction}
+              />
               <div className="stats">
                 <div className="stat">
                   <span>Demonstration engines</span>
@@ -348,81 +392,61 @@ export default function App() {
                   <p>Never treated as reassuring</p>
                 </div>
               </div>
-              <div className="fleet-grid">
-                <div>
-                  {prediction ? (
-                    <HealthCard key={selected} prediction={prediction} />
-                  ) : (
-                    <LoadState empty />
-                  )}
-                  <section className="panel explanation">
-                    <h3>Read the estimate, not a failure clock.</h3>
-                    <p>
-                      Remaining useful life is the model’s estimate of how many
-                      operating cycles may remain before its learned end-of-life
-                      condition. Actual failure timing may differ.
-                    </p>
-                    <a href="#/reliability">
-                      Understand the limitations <ArrowRight size={15} />
-                    </a>
-                  </section>
+              <section className="panel fleet-list">
+                <div className="section-top">
+                  <h2>Engine priority list</h2>
+                  <span className="small muted">{rows.length} engines</span>
                 </div>
-                <section className="panel fleet-list">
-                  <div className="section-top">
-                    <h2>Engine priority list</h2>
-                    <span className="small muted">{rows.length} engines</span>
-                  </div>
-                  <p className="small muted">
-                    Ordered by raw estimated life. Select an engine.
-                  </p>
-                  <div className="table-wrap">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Engine</th>
-                          <th>Raw cycles</th>
-                          <th>Interpretation</th>
+                <p className="small muted">
+                  Ordered by raw estimated life. Select an engine.
+                </p>
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Engine</th>
+                        <th>Raw cycles</th>
+                        <th>Interpretation</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((row) => (
+                        <tr
+                          className={
+                            row.engine_id === selected ? "selected" : ""
+                          }
+                          key={row.engine_id}
+                        >
+                          <th>
+                            <button
+                              aria-label={`Select engine ${row.engine_id}`}
+                              aria-pressed={row.engine_id === selected}
+                              onClick={() => setSelected(row.engine_id)}
+                            >
+                              E-{String(row.engine_id).padStart(3, "0")}
+                            </button>
+                          </th>
+                          <td>
+                            {row.raw_rul === null ||
+                            !Number.isFinite(row.raw_rul)
+                              ? "Unavailable"
+                              : row.raw_rul.toFixed(1)}
+                          </td>
+                          <td>
+                            <span className={`status-dot ${row.level}`} />
+                            {row.status}
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map((row) => (
-                          <tr
-                            className={
-                              row.engine_id === selected ? "selected" : ""
-                            }
-                            key={row.engine_id}
-                          >
-                            <th>
-                              <button
-                                aria-label={`Select engine ${row.engine_id}`}
-                                aria-pressed={row.engine_id === selected}
-                                onClick={() => setSelected(row.engine_id)}
-                              >
-                                E-{String(row.engine_id).padStart(3, "0")}
-                              </button>
-                            </th>
-                            <td>
-                              {row.raw_rul === null ||
-                              !Number.isFinite(row.raw_rul)
-                                ? "Unavailable"
-                                : row.raw_rul.toFixed(1)}
-                            </td>
-                            <td>
-                              <span className={`status-dot ${row.level}`} />
-                              {row.status}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <p className="small muted">
-                    Complete demonstration trajectories include failure
-                    endpoints. Replay uses each engine’s last available cycle at
-                    or before {settings.cycle}; it is not a live fleet.
-                  </p>
-                </section>
-              </div>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="small muted">
+                  Complete demonstration trajectories include failure endpoints.
+                  Replay uses each engine’s last available cycle at or before{" "}
+                  {settings.cycle}; it is not a live fleet.
+                </p>
+              </section>
             </>
           )}
           {page === "engines" && engines.data && (
@@ -434,6 +458,7 @@ export default function App() {
               prediction={prediction}
             />
           )}
+          {page === "data" && <DataInformation />}
           {page === "models" && <Comparison />}
           {page === "reliability" && <ReliabilityPage />}
           <footer>

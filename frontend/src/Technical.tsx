@@ -28,7 +28,7 @@ export function Comparison() {
         Overlapping windows are correlated; these are not unbiased
         generalization estimates.
       </div>
-      <LoadState {...scores} />
+      <LoadState loading={scores.loading} error={scores.error} />
       {scores.data && (
         <>
           <div className="panel table-wrap">
@@ -113,7 +113,7 @@ export function Comparison() {
           </select>
         </label>
       </div>
-      <LoadState {...diagnostic} />
+      <LoadState loading={diagnostic.loading} error={diagnostic.error} />
       {diagnostic.data && (
         <>
           <div className="two-col">
@@ -174,7 +174,7 @@ export function ReliabilityPage() {
         Verified development-validation findings. These models are research
         prototypes, not validated maintenance decision systems.
       </div>
-      <LoadState {...r} />
+      <LoadState loading={r.loading} error={r.error} />
       {r.data && (
         <>
           <div className="stats reliability-stats">
