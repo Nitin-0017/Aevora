@@ -87,8 +87,8 @@ def load_config(path: str | Path) -> Settings:
             if key == "max_leaf_nodes":
                 minimum = 2
             _number(value, f"{name}.{key}", integer=key in integer_keys, minimum=minimum)
-    if models["baseline"]["strategy"] != "mean":
-        raise ValueError("The initial baseline strategy must be mean")
+    if models["baseline"]["strategy"] != "median":
+        raise ValueError("The initial baseline strategy must be median")
     if models["lstm"]["device"] != "cpu":
         raise ValueError("The initial reproducible configuration uses cpu")
     root = _path(config_path.parent, raw["project_root"], "project_root")

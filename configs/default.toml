@@ -11,7 +11,7 @@ rolling_window = 5
 # rul_cap = 125
 
 [models.baseline]
-strategy = "mean"
+strategy = "median"
 
 [models.ridge]
 alpha = 1.0
