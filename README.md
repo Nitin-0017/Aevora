@@ -171,7 +171,10 @@ OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 .venv/bin/python -m streamlit run dashb
 
 Open http://127.0.0.1:8501. See [dashboard setup and verification](docs/dashboard.md)
 for required local artifacts, cache behavior, risk-band definitions and manual checks.
-The six views cover fleet replay, engine sensors, real saved-model inference,
-model comparison, reliability findings and data context. All four models use
+The default Machine overview explains estimated remaining life and the suggested
+next step in plain language. Select an engine and model, then choose Run prediction.
+Technical details retains fleet replay, engine sensors, model comparison, reliability
+findings and data context. Optional operating-hours conversion requires a verified
+rate supplied by the user. All four models use
 frozen preprocessing. This is NASA demonstration data, not live equipment.
 The dashboard never trains models or reads official test trajectories/targets.

@@ -116,3 +116,39 @@ docs/dashboard.md
 README.md
 pyproject.toml
 ```
+
+
+## Operator-first redesign (Phase 7 refinement)
+
+The default page is now **Machine overview**. A compact “How to use AEVORA” guide precedes the engine selector. Select an engine, choose a model in the sidebar, then press **Run prediction**. The large card shows engine ID, estimated remaining life in cycles, a textual/icon status, recommended next step, latest available cycle, model and actual UTC prediction-generation timestamp. The timestamp records application inference completion, not the historical sensor observation time.
+
+No prediction is silently assumed on first load. Changing engine, model, replay cycle or artifact inputs hides any result that does not match those selections. Run prediction to assess the new selection. Existing predictions retain their real generation timestamp when other display controls change. Input/inference errors show “Unable to assess” with actionable guidance and expandable technical details.
+
+### How to interpret the card
+
+| Unrounded model output | Category | Suggested next step |
+|---|---|---|
+| Missing, nonfinite or negative | Unable to assess | Check data; seek a qualified technician; do not rely on the estimate |
+| 0–30 cycles inclusive | Needs review | Schedule an inspection and have a technician verify condition |
+| Above 30 through 100 inclusive | Monitor | Review, monitor routinely and plan inspection if concerns persist |
+| Above 100 | Within demonstration range | Continue routine monitoring and scheduled inspections; not a safety clearance |
+
+These are configurable **illustrative** thresholds, not validated safety states or failure probabilities. All recommendations are decision-support guidance, not operational procedures. They do not authorize automatic shutdown. The card rounds valid estimates to two decimal places; categories use the original unrounded value. Raw output remains available in Technical prediction details. Negative output is shown explicitly as invalid, never clipped to zero or presented as reassuring. No sensor importance or causal explanation is fabricated.
+
+The “Why are we showing this?” explanation describes learned sensor patterns and the selected threshold band in ordinary language. It states that estimates can be wrong and cannot replace inspection. A small chart displays one recorded sensor at a time, without suggesting the trace diagnoses a fault. The collapsible reliability explanation describes observed development error in ordinary language; it is not a per-engine confidence estimate.
+
+Optional operating-hours conversion is disabled by default. Only when a user confirms a verified average rate and enters positive finite cycles/hour does the application compute `predicted cycles / cycles per hour`. Missing rates produce no hours estimate; zero, negative and nonfinite rates are rejected. Invalid RUL never becomes hours. Results are explicitly assumption-based, not a guaranteed failure time, calendar date, or hours measurement.
+
+**Technical details** retains Fleet overview, Engine explorer, RUL prediction, Model comparison, Reliability insights and Model & data information. The prior technical sections described above now live there; their datasets and metrics remain unchanged. The technical refresh control is now “Refresh technical inference”. Model selection and replay still use the same frozen inference pipeline. The earlier six-view navigation and manual smoke steps above describe the initial Phase 7 version; use the new navigation names for this refinement.
+
+### Redesign verification
+
+- **83 tests passed**, zero failures/errors/skips, with Python warnings treated as errors (28.223 seconds); focused dashboard checks were rerun after relocating the usage guide.
+- Existing checkpoint/preprocessing and uncommitted audit-file hashes remain unchanged. No benchmark retraining, target access or metric edits.
+- The server the user launched in normal macOS Terminal was reachable. The redesigned page was loaded in the browser and a real boosted-tree prediction was run for engine 3 at cycle 100: **122.09 cycles**.
+- An actual screenshot is saved locally at `artifacts/reports/FD001/dashboard/operator-overview.jpg` (Git-ignored). This supersedes the earlier inability to inspect the browser when the sandbox itself attempted to start the server. No screenshot was fabricated.
+- Browser rendering of the operator card was inspected; all supported-model flows, conversion, stale-selection handling and retained technical sections were exercised with Streamlit AppTest. No comprehensive accessibility certification or production-readiness claim is made.
+
+Additional source: `operator.py` contains pure status/recommendation and conversion rules; `operator_view.py` contains the operator UI. The existing app composes it without changing inference/model code. The expanded test suite includes `test_dashboard_operator.py`.
+
+Launch command is unchanged. If an existing browser session shows the previous UI, reload it; if the server has stopped, rerun the documented launch command.

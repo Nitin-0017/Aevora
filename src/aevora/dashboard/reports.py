@@ -74,7 +74,7 @@ def reliability_view(snapshot):
 
 def prediction_view(snapshot,fleet,model,cycle,high,elevated):
     st.subheader('RUL prediction')
-    st.write('Choose a recorded validation engine. Use “Run / refresh inference” in the sidebar to rerun the saved model at the selected replay cycle.')
+    st.write('Choose a recorded validation engine. Use “Refresh technical inference” above to rerun the saved model at the selected replay cycle.')
     engine=st.selectbox('Prediction engine',sorted(snapshot.raw.unit_id.unique().tolist()))
     row=fleet.loc[fleet.unit_id==engine].iloc[0]
     history=engine_history(snapshot.raw,engine,cycle)
