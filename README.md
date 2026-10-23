@@ -9,8 +9,9 @@ Simulation results do not demonstrate factory savings or industrial reliability.
 
 ## Current status
 
-Phase 1 foundation only: package, configuration, setup instructions and tests.
-No dataset has been downloaded, no model trained, and no metrics measured.
+Phases 1–2: foundation, strict dataset ingestion/validation, and training-only EDA.
+The NASA-linked FD001 training/test files are available locally. Official RUL
+targets remain unextracted in the downloaded archive. No model has been trained.
 The dashboard and all prediction functionality are planned, not implemented.
 
 ## Setup
@@ -69,7 +70,7 @@ data/                    Future local datasets; ignored by Git
 artifacts/               Future models/reports; ignored by Git
 ```
 
-Data and artifact directories are intentionally not populated in Phase 1.
+Data and EDA artifact directories are populated locally and ignored by Git.
 Future selected evaluation summaries may be committed under documentation after
 review. Raw data, fitted artifacts, environments and secrets stay out of Git.
 
@@ -85,8 +86,24 @@ Each phase ends with tests, a diff review, and user approval before the next pha
 
 ## GitHub
 
-A local repository is initialized on `main`; no remote or commits are configured
-as part of this foundation preparation. Review the three proposed commit groups
-in the roadmap before committing. To publish later, create an empty GitHub
-repository, add its URL with `git remote add origin <repository-url>`, and push
-reviewed commits with `git push -u origin main`. Never commit dataset files or keys.
+The repository uses `main` and has an existing `origin` remote. Phase work is
+committed locally; pushing requires explicit approval. Never commit datasets or keys.
+
+## Phase 2: validation and EDA
+
+See [dataset acquisition](docs/dataset.md), [EDA usage](docs/eda.md), and
+[observed findings](docs/phase2_findings.md). Minimal Phase 2 setup (no PyTorch):
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install 'numpy>=1.26,<3' 'pandas>=2.2,<3' 'matplotlib>=3.8,<4'
+PYTHONPATH=src python -m unittest discover -s tests -v
+PYTHONPATH=src python -m aevora.data --config configs/default.toml --split train
+PYTHONPATH=src python -m aevora.eda --config configs/default.toml
+```
+
+Reports go to `<artifact_dir>/reports/FD001/train/`; change `artifact_dir` in the
+existing TOML config to relocate them. All EDA statistics use training data only.
+Loader tests use small artificial temporary fixtures; no real data is required
+for tests. The plotting integration test skips explicitly if Matplotlib is absent.

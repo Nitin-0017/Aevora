@@ -2,7 +2,7 @@
 
 Target about 30 substantive commits; never pad history. Each phase begins with
 status inspection and ends with relevant checks, diff review, reporting and user
-approval. Only Phase 1 is implemented here; the remaining work is planned.
+approval. Phases 1 and 2 are implemented; subsequent work requires approval.
 
 | Phase | Scope | Target commits |
 | --- | --- | --- |
@@ -32,9 +32,13 @@ diff before committing; stage only the listed files.
    - Check: `PYTHONPATH=src python3 -m unittest discover -s tests -v`;
      `git diff --check` and inspect all added files before committing.
 
-## Phase 2 gate
+## Phase 2 implementation
 
-Wait for explicit user approval. Then verify dataset provenance and access,
-implement the loader and schema validation, and perform training-data EDA. Keep
-official test targets unopened until the final evaluation phase. Do not fabricate
-data if download or access fails.
+Acquisition documentation, strict loader and quality reports, fixture tests, and
+training-only EDA are implemented. See `dataset.md`, `eda.md`, and
+`phase2_findings.md`. Four substantive Phase 2 commits capture this work.
+
+## Phase 3 gate
+
+Wait for explicit approval before adding labels, splits, preprocessing, or
+features. Official test targets remain sealed until final evaluation.
