@@ -78,3 +78,26 @@ metrics. It writes to `artifact_dir/reports/FD001/lstm_validation/`: metrics JSO
 predictions, history, per-engine and RUL-band CSVs, scatter, residual histogram,
 engine MAE bars and training curves. Bands match Phase 4: 0–30, >30–100 and >100
 RUL cycles. Residual is prediction minus actual. No models are retrained here.
+
+## Compare with classical models
+
+```bash
+PYTHONPATH=src OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 .venv/bin/python -W error -m aevora.evaluation --config configs/default.toml --include-lstm
+```
+
+The existing comparison command now accepts `--include-lstm`. It reloads all
+four estimators, checks identical preparation hashes and exact engine/cycle/RUL
+alignment, and writes `artifact_dir/reports/FD001/validation_with_lstm/`. The
+original classical-only command and reports remain available. Full-precision
+metrics, engine/band errors and four-panel plots share the same 3,472 endpoints.
+Timing scopes are explicit: classical values measure `.fit()` only; LSTM time
+includes per-epoch validation. Treat these as different timing scopes, not a
+controlled speed benchmark.
+
+All scores are development estimates because the same validation engines selected
+classical hyperparameters and the LSTM checkpoint. Overlapping windows are
+correlated and longer engines contribute more pooled observations. Engine-macro
+MAE weights engines equally. Official evaluation will use truncated test-engine
+endpoints after model selection is frozen, only in an approved later phase.
+A single seed/run does not establish general superiority, calibrated uncertainty,
+production readiness, or real-world maintenance savings.

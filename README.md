@@ -9,12 +9,12 @@ Simulation results do not demonstrate factory savings or industrial reliability.
 
 ## Current status
 
-Phases 1–4: foundation, ingestion/validation, training-only EDA, leakage-safe
-data preparation, and classical model training and comparison.
+Phases 1–5: foundation, ingestion/validation, training-only EDA, leakage-safe
+data preparation, classical models, and a tested CPU LSTM with aligned comparison.
 The NASA-linked FD001 training/test files are available locally. Official RUL
 targets remain unextracted in the downloaded archive. Median baseline, Ridge and
-boosted-tree models are trained locally with reusable saved-bundle inference.
-LSTM, final test evaluation and the dashboard remain planned.
+boosted-tree and LSTM models are trained locally with reusable saved-bundle inference.
+Final test evaluation and the dashboard remain planned.
 
 ## Setup
 
@@ -139,3 +139,11 @@ This compares saved models without retraining and writes metrics, error tables
 and plots to configured `artifact_dir/reports/FD001/validation/`. Validation was
 used for model selection; these are not final test scores. Large generated
 models and arrays remain local and ignored by Git.
+
+## Phase 5: LSTM
+
+See [LSTM training and inference](docs/lstm.md) and [measured Phase 5 results](docs/phase5_findings.md).
+The single-layer CPU LSTM uses the same 20 × 75 sequences and validation endpoints.
+It did not beat boosted trees in this run; the best checkpoint is restored after
+early stopping. Training curves, per-engine errors and four-model comparisons
+are saved locally. No official test RUL targets have been used.

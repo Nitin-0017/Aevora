@@ -2,7 +2,7 @@
 
 Target about 30 substantive commits; never pad history. Each phase begins with
 status inspection and ends with relevant checks, diff review, reporting and user
-approval. Phases 1–4 are implemented; subsequent work requires approval.
+approval. Phases 1–5 are implemented; subsequent work requires approval.
 
 | Phase | Scope | Target commits |
 | --- | --- | --- |
@@ -49,7 +49,14 @@ Median baseline, Ridge and histogram boosted trees share verified historical
 summary features and validation endpoints. See `classical_models.md` and
 `phase4_findings.md` for inference, tuning rules and measured errors.
 
-## Phase 5 gate
+## Phase 5 implementation
 
-Wait for explicit approval before implementing or training an LSTM.
+Small deterministic CPU LSTM, early stopping and best-checkpoint restoration,
+portable inference, and aligned four-model validation reports are implemented.
+See `lstm.md` and `phase5_findings.md`.
+
+## Phase 6 gate
+
+Wait for explicit approval before final test evaluation, robustness experiments,
+or model-card/release work.
 Official test targets remain sealed until final evaluation.

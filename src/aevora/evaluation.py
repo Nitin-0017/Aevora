@@ -1,4 +1,4 @@
-"""Compare saved classical models on shared development-validation endpoints."""
+"""Compare saved models on shared development-validation endpoints."""
 
 import argparse
 import json
@@ -38,7 +38,7 @@ def error_tables(frame):
     return engines, bands
 
 
-def compare_models(settings):
+def compare_models(settings, *, include_lstm=False):
     manifest, batches = load_prepared(settings)
     batch = batches["validation"]
     reference = batch.endpoints.copy()
@@ -46,14 +46,19 @@ def compare_models(settings):
     frames, reports, engine_rows, band_rows = {}, [], [], []
     prepared_dir = settings.artifact_dir / "prepared" / settings.dataset
     hashes = {p.name: digest(p) for p in sorted(prepared_dir.iterdir()) if p.is_file()}
-    for name in MODELS:
+    for name in MODELS + (("lstm",) if include_lstm else ()):
         directory = settings.artifact_dir / "models" / settings.dataset / name
         report = json.loads((directory / "metadata.json").read_text())
         if report["prepared_sha256"] != hashes:
             raise ValueError(f"{name} was trained on different preparation artifacts")
         frame = pd.read_csv(directory / "validation_predictions.csv")
         align_predictions(reference, frame)
-        predicted = Predictor.load(directory).predict(batch.x, manifest["feature_names"])
+        if name == "lstm":
+            from .lstm_evaluation import validated_predictions
+            validated, report, _ = validated_predictions(settings, manifest, batch)
+            predicted = validated.predicted_rul.to_numpy()
+        else:
+            predicted = Predictor.load(directory).predict(batch.x, manifest["feature_names"])
         np.testing.assert_allclose(predicted, frame.predicted_rul, rtol=1e-12, atol=1e-12)
         score = metrics(batch.y, predicted)
         for key in score:
@@ -68,9 +73,11 @@ def compare_models(settings):
                         "engines": int(frame.unit_id.nunique()),
                         "engine_macro_mae": float(np.mean([row["mae"] for row in engines])),
                         "negative_predictions": int((predicted < 0).sum()),
-                        "fit_seconds": report["fit_seconds"], "search_fit_seconds": report["search_fit_seconds"],
-                        "selected_parameters": report["trials"][report["selected_trial"]]["parameters"]})
-    output = settings.artifact_dir / "reports" / settings.dataset / "validation"
+                        "fit_seconds": report["fit_seconds"], "search_fit_seconds": report.get("search_fit_seconds", report["fit_seconds"]),
+                        "timing_scope": "epoch training plus validation" if name == "lstm" else "estimator fit only",
+                        "selected_parameters": (report["model_config"] if name == "lstm" else
+                                                report["trials"][report["selected_trial"]]["parameters"])})
+    output = settings.artifact_dir / "reports" / settings.dataset / ("validation_with_lstm" if include_lstm else "validation")
     output.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(engine_rows).to_csv(output / "errors_by_engine.csv", index=False)
     pd.DataFrame(band_rows).to_csv(output / "errors_by_rul_band.csv", index=False)
@@ -129,8 +136,9 @@ def plot_errors(frames, engines, output, artifact_dir):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", required=True)
+    parser.add_argument("--include-lstm", action="store_true", help="Compare four saved models on identical endpoints")
     args = parser.parse_args()
-    print(json.dumps(compare_models(load_config(args.config)), indent=2))
+    print(json.dumps(compare_models(load_config(args.config), include_lstm=args.include_lstm), indent=2))
 
 
 if __name__ == "__main__":

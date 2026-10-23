@@ -52,3 +52,22 @@ class LSTMEvaluationTests(unittest.TestCase):
         (directory / 'metadata.json').write_text(json.dumps(metadata))
         with self.assertRaisesRegex(ValueError, 'provenance'):
             evaluate_lstm(self.settings)
+
+    def test_four_model_comparison_has_identical_counts_and_correct_metrics(self):
+        from aevora.evaluation import compare_models, MODELS
+        from aevora.training import train_model, metrics
+        self.settings.models['gradient_boosting']['max_iter'] = 3
+        for name in MODELS:
+            train_model(self.settings, name)
+        report = compare_models(self.settings, include_lstm=True)
+        self.assertEqual([row['model'] for row in report['models']], [*MODELS, 'lstm'])
+        for row in report['models']:
+            self.assertEqual((row['observations'], row['engines']), (6, 1))
+            path = self.settings.artifact_dir / 'models/FD001' / row['model'] / 'validation_predictions.csv'
+            predictions = pd.read_csv(path)
+            score = metrics(predictions.rul.to_numpy(), predictions.predicted_rul.to_numpy())
+            self.assertAlmostEqual(row['mae'], score['mae'])
+            self.assertAlmostEqual(row['rmse'], score['rmse'])
+        self.assertEqual(report['models'][-1]['timing_scope'], 'epoch training plus validation')
+        self.assertFalse((self.settings.artifact_dir / 'reports/FD001/validation').exists())
+        self.assertTrue((self.settings.artifact_dir / 'reports/FD001/validation_with_lstm/metrics.json').exists())
