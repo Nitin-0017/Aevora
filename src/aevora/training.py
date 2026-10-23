@@ -10,6 +10,7 @@ import time
 import numpy as np
 import pandas as pd
 from sklearn.dummy import DummyRegressor
+from sklearn.linear_model import Ridge
 from .classical import Predictor, summarize
 from .config import load_config
 from .data.labels import training_rul
@@ -84,6 +85,10 @@ def load_prepared(settings):
 def candidates(name, settings):
     if name == "baseline":
         return [DummyRegressor(strategy=settings.models["baseline"]["strategy"])]
+    if name == "ridge":
+        # Small regularization sweep anchored to the central configuration.
+        alphas = sorted(set(settings.models["ridge"]["alpha"] * factor for factor in (1, 10, 100)))
+        return [Ridge(alpha=alpha, solver="svd") for alpha in alphas]
     raise ValueError(f"Unsupported model: {name}")
 
 
@@ -133,7 +138,7 @@ def train_model(settings, name, prepared=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", required=True)
-    parser.add_argument("--model", choices=["baseline"], required=True)
+    parser.add_argument("--model", choices=["baseline", "ridge"], required=True)
     args = parser.parse_args()
     print(json.dumps(train_model(load_config(args.config), args.model), indent=2))
 
