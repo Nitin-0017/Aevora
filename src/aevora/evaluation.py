@@ -38,12 +38,13 @@ def error_tables(frame):
     return engines, bands
 
 
-def compare_models(settings, *, include_lstm=False):
+def verified_predictions(settings, *, include_lstm=False):
+    """Read/reproduce saved predictions without writing reports or fitting models."""
     manifest, batches = load_prepared(settings)
     batch = batches["validation"]
     reference = batch.endpoints.copy()
     reference["rul"] = batch.y
-    frames, reports, engine_rows, band_rows = {}, [], [], []
+    frames, reports = {}, {}
     prepared_dir = settings.artifact_dir / "prepared" / settings.dataset
     hashes = {p.name: digest(p) for p in sorted(prepared_dir.iterdir()) if p.is_file()}
     for name in MODELS + (("lstm",) if include_lstm else ()):
@@ -66,6 +67,18 @@ def compare_models(settings, *, include_lstm=False):
                 raise ValueError(f"{name} metadata metrics differ from reloaded predictions")
         frame["predicted_rul"] = predicted
         frames[name] = frame
+        reports[name] = report
+    return manifest, batches, frames, reports
+
+
+def compare_models(settings, *, include_lstm=False):
+    manifest, batches, frames, metadata = verified_predictions(settings, include_lstm=include_lstm)
+    hashes = next(iter(metadata.values()))["prepared_sha256"]
+    reports, engine_rows, band_rows = [], [], []
+    for name, frame in frames.items():
+        report = metadata[name]
+        predicted = frame.predicted_rul.to_numpy()
+        score = metrics(frame.rul.to_numpy(), predicted)
         engines, bands = error_tables(frame)
         engine_rows.extend({"model": name, **row} for row in engines)
         band_rows.extend({"model": name, **row} for row in bands)
