@@ -4,6 +4,7 @@ import streamlit as st
 from .data import (MODEL_NAMES, DEMO_LABEL, cache_token, load_snapshot, load_predictor,
                    fleet_predictions, ArtifactError)
 from .views import fleet_view, engine_view
+from .reports import comparison_view, reliability_view, prediction_view, information_view
 
 CONFIG = Path(__file__).resolve().parents[3] / 'configs/default.toml'
 
@@ -35,7 +36,7 @@ def main():
     st.markdown('**Intelligence Before Failure.**')
     st.caption(DEMO_LABEL)
     st.sidebar.title('Operations workspace')
-    page=st.sidebar.radio('View',['Fleet overview','Engine explorer'])
+    page=st.sidebar.radio('View',['Fleet overview','Engine explorer','RUL prediction','Model comparison','Reliability insights','Model & data information'])
     model=st.sidebar.selectbox('Saved model',list(MODEL_NAMES),format_func=MODEL_NAMES.get)
     with st.sidebar.expander('Illustrative risk thresholds'):
         high=st.number_input('High concern at or below (cycles)',min_value=0.,value=30.,step=5.)
@@ -57,8 +58,16 @@ def main():
         st.sidebar.caption('Frozen preprocessing v1 · 20 timesteps × 75 ordered features · CPU inference')
         if page=='Fleet overview':
             fleet_view(snapshot,fleet,model,cycle,high,elevated)
-        else:
+        elif page=='Engine explorer':
             engine_view(snapshot,fleet,model,cycle,high,elevated)
+        elif page=='RUL prediction':
+            prediction_view(snapshot,fleet,model,cycle,high,elevated)
+        elif page=='Model comparison':
+            comparison_view(snapshot)
+        elif page=='Reliability insights':
+            reliability_view(snapshot)
+        else:
+            information_view(snapshot)
     except (ArtifactError,OSError,ValueError,KeyError,RuntimeError) as exc:
         st.error(str(exc))
         st.info('Check the local setup in docs/dashboard.md. The application will not download data, train models or substitute placeholder predictions.')
