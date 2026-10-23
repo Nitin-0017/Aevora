@@ -92,7 +92,9 @@ def plot_errors(frames, engines, output, artifact_dir):
     import matplotlib.pyplot as plt
     all_values = np.concatenate([f[["rul", "predicted_rul"]].to_numpy().ravel() for f in frames.values()])
     limits = (min(0, float(all_values.min())), float(all_values.max()) + 5)
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4), sharex=True, sharey=True)
+    fig, grid = plt.subplots(1, len(frames), figsize=(max(5, 4.7 * len(frames)), 4),
+                             sharex=True, sharey=True, squeeze=False)
+    axes = grid[0]
     for ax, (name, frame) in zip(axes, frames.items()):
         ax.scatter(frame.rul, frame.predicted_rul, s=5, alpha=.15, rasterized=True)
         ax.plot(limits, limits, "k--", linewidth=1)
@@ -102,8 +104,13 @@ def plot_errors(frames, engines, output, artifact_dir):
     fig.savefig(output / "actual_vs_predicted.png", dpi=150)
     plt.close(fig)
     residuals = {name: frame.predicted_rul - frame.rul for name, frame in frames.items()}
-    bins = np.linspace(min(r.min() for r in residuals.values()), max(r.max() for r in residuals.values()), 51)
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4), sharex=True, sharey=True)
+    low, high = min(r.min() for r in residuals.values()), max(r.max() for r in residuals.values())
+    if low == high:
+        low, high = low - .5, high + .5
+    bins = np.linspace(low, high, 51)
+    fig, grid = plt.subplots(1, len(frames), figsize=(max(5, 4.7 * len(frames)), 4),
+                             sharex=True, sharey=True, squeeze=False)
+    axes = grid[0]
     for ax, (name, residual) in zip(axes, residuals.items()):
         ax.hist(residual, bins=bins)
         ax.axvline(0, color="black", linestyle="--")

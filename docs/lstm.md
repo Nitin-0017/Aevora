@@ -65,3 +65,16 @@ Raw-history prediction reuses Phase 3 preprocessing, requires all available
 history from cycle 1 and at least 20 cycles, and returns each engine's latest
 endpoint. Feature order, length and frozen preprocessing remain coupled to the
 checkpoint. Only load model artifacts from trusted sources.
+
+## Validation diagnostics
+
+```bash
+PYTHONPATH=src OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 .venv/bin/python -W error -m aevora.lstm_evaluation --config configs/default.toml
+```
+
+Evaluation reloads the checkpoint, verifies its hash and preparation hashes,
+checks the exact endpoint/target order, and reproduces saved predictions and
+metrics. It writes to `artifact_dir/reports/FD001/lstm_validation/`: metrics JSON,
+predictions, history, per-engine and RUL-band CSVs, scatter, residual histogram,
+engine MAE bars and training curves. Bands match Phase 4: 0–30, >30–100 and >100
+RUL cycles. Residual is prediction minus actual. No models are retrained here.
