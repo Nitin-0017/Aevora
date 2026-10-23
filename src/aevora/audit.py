@@ -2,11 +2,12 @@
 
 import argparse
 import json
-import pandas as pd
 from .config import load_config
 from .evaluation import verified_predictions
 from .reliability import build_tables
 from .training import digest
+from .audit_stability import stability_probe, NOISE_FRACTION
+from .audit_plots import plot_audit
 
 
 def input_fingerprints(settings):
@@ -31,8 +32,11 @@ def run_audit(settings):
     before = input_fingerprints(settings)
     manifest, batches, frames, metadata = verified_predictions(settings, include_lstm=True)
     tables = build_tables(frames)
+    stability, engine_stability, contracts = stability_probe(settings, manifest, batches["validation"], frames)
+    tables.update(stability=stability, engine_stability=engine_stability, input_contracts=contracts)
     output = settings.artifact_dir / 'reports' / settings.dataset / 'reliability'
     records = write_tables(tables, output)
+    plot_audit(frames, tables, output, settings.artifact_dir)
     alignment = frames['gradient_boosting'][['unit_id', 'cycle', 'rul']]
     alignment.to_csv(output / 'validation_endpoints.csv', index=False)
     if before != input_fingerprints(settings):
@@ -42,6 +46,10 @@ def run_audit(settings):
               'validation_engine_ids': manifest['validation_engine_ids'],
               'training_engine_ids': manifest['training_engine_ids'],
               'source_sha256': manifest['source_sha256'],
+              'perturbation': {'distribution': 'independent zero-mean Gaussian noise on selected raw sensors',
+                               'scale': 'saved training standard deviation of each raw sensor',
+                               'fraction': NOISE_FRACTION, 'seed': settings.random_seed,
+                               'scope': 'synthetic sensitivity probe, not operational failure or uncertainty'},
               'validation_endpoints_sha256': digest(output / 'validation_endpoints.csv'),
               'input_sha256': before, 'tables': records}
     (output / 'audit.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
