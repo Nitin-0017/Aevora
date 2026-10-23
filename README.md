@@ -9,12 +9,12 @@ Simulation results do not demonstrate factory savings or industrial reliability.
 
 ## Current status
 
-Phases 1–6: foundation, ingestion/validation, training-only EDA, leakage-safe
-data preparation, classical models, a tested CPU LSTM, and a validation reliability audit.
+Phases 1–7: foundation, ingestion/validation, training-only EDA, leakage-safe
+data preparation, classical models, a tested CPU LSTM, a validation reliability audit, and an offline Streamlit dashboard.
 The NASA-linked FD001 training/test files are available locally. Official RUL
 targets remain unextracted in the downloaded archive. Median baseline, Ridge and
 boosted-tree and LSTM models are trained locally with reusable saved-bundle inference.
-Final test evaluation and the dashboard remain planned.
+Final official test evaluation remains planned. The dashboard uses validation-engine replay only.
 
 ## Setup
 
@@ -161,3 +161,17 @@ PYTHONPATH=src OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 .venv/bin/python -W erro
 
 Outputs: configured `artifact_dir/reports/FD001/reliability/`. The best aggregate
 model still has meaningful failure cases; use the report alongside overall scores.
+
+## Phase 7: interactive dashboard
+
+```bash
+cd /Users/nitinkumar/Documents/Codex/2026-10-23/he/outputs/aevora
+OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 .venv/bin/python -m streamlit run dashboard.py --server.address 127.0.0.1
+```
+
+Open http://127.0.0.1:8501. See [dashboard setup and verification](docs/dashboard.md)
+for required local artifacts, cache behavior, risk-band definitions and manual checks.
+The six views cover fleet replay, engine sensors, real saved-model inference,
+model comparison, reliability findings and data context. All four models use
+frozen preprocessing. This is NASA demonstration data, not live equipment.
+The dashboard never trains models or reads official test trajectories/targets.
