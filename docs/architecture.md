@@ -1,7 +1,8 @@
 # Planned engineering contracts
 
-These contracts guide the project. Phases 1–5 implement data preparation,
-classical models and an LSTM. Final test evaluation remains future work.
+These contracts guide the project. Phases 1–6 implement data preparation,
+classical models, an LSTM and validation reliability auditing. Final test evaluation
+remains future work.
 
 ## Data and labels
 
@@ -56,3 +57,14 @@ Brand: dark navy/charcoal, restrained cyan, amber warnings, readable charts.
 Streamlit will display real saved results with model/data provenance. No invented
 metrics, fabricated screenshots, real-time claims from recorded playback, or
 claims of production safety. Cycles are not automatically hours or days.
+
+## Implemented reliability audit
+
+The shared verified-prediction loader reproduces saved outputs on identical
+validation endpoints. Phase 6 adds signed errors, engine variation, RUL/cycle
+bands, extreme-error diagnostics and a fixed 1%-of-training-standard-deviation
+raw-sensor Gaussian perturbation. Causal features are regenerated with frozen
+preprocessing. Source model/preparation hashes must remain unchanged. Missing
+inputs are rejected, not imputed. All results are descriptive development evidence;
+no uncertainty calibration, operational fault simulation or benchmark refit occurs.
+See `phase6_reliability.md` for observed failure patterns and limitations.

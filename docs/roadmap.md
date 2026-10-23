@@ -2,7 +2,7 @@
 
 Target about 30 substantive commits; never pad history. Each phase begins with
 status inspection and ends with relevant checks, diff review, reporting and user
-approval. Phases 1–5 are implemented; subsequent work requires approval.
+approval. Phases 1–6 are implemented; subsequent work requires approval.
 
 | Phase | Scope | Target commits |
 | --- | --- | --- |
@@ -10,8 +10,8 @@ approval. Phases 1–5 are implemented; subsequent work requires approval.
 | 2 | Dataset loading, validation, EDA | 4 |
 | 3 | Labels, preprocessing, causal features | 4 |
 | 4 | Classical models and evaluation | 4 |
-| 5 | LSTM and fair comparison | 3 |
-| 6 | Frozen final evaluation, robustness, model card | 5 |
+| 5 | LSTM and fair comparison | 4 |
+| 6 | Validation reliability audit and failure analysis | 4 |
 | 7 | Dashboard with shared real inference | 5 |
 | 8 | Integration checks, documentation, release | 2 |
 
@@ -55,8 +55,15 @@ Small deterministic CPU LSTM, early stopping and best-checkpoint restoration,
 portable inference, and aligned four-model validation reports are implemented.
 See `lstm.md` and `phase5_findings.md`.
 
-## Phase 6 gate
+## Phase 6 implementation
 
-Wait for explicit approval before final test evaluation, robustness experiments,
-or model-card/release work.
-Official test targets remain sealed until final evaluation.
+The approved Phase 6 scope is a validation-only reliability audit, replacing the
+older planned final-evaluation scope for this phase. Per-engine bias, RUL bands,
+residual/extreme-error plots and a fixed synthetic noise probe reuse frozen models.
+See `phase6_reliability.md`. Four meaningful commits capture the audit.
+
+## Next-phase gate
+
+Wait for explicit approval before dashboard work, final test evaluation, expanded
+robustness/calibration experiments or model-card/release work. Official test targets
+remain sealed until a separately approved, frozen final-evaluation protocol.

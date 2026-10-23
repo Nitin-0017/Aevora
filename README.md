@@ -9,8 +9,8 @@ Simulation results do not demonstrate factory savings or industrial reliability.
 
 ## Current status
 
-Phases 1–5: foundation, ingestion/validation, training-only EDA, leakage-safe
-data preparation, classical models, and a tested CPU LSTM with aligned comparison.
+Phases 1–6: foundation, ingestion/validation, training-only EDA, leakage-safe
+data preparation, classical models, a tested CPU LSTM, and a validation reliability audit.
 The NASA-linked FD001 training/test files are available locally. Official RUL
 targets remain unextracted in the downloaded archive. Median baseline, Ridge and
 boosted-tree and LSTM models are trained locally with reusable saved-bundle inference.
@@ -147,3 +147,17 @@ The single-layer CPU LSTM uses the same 20 × 75 sequences and validation endpoi
 It did not beat boosted trees in this run; the best checkpoint is restored after
 early stopping. Training curves, per-engine errors and four-model comparisons
 are saved locally. No official test RUL targets have been used.
+
+## Phase 6: reliability audit
+
+The [reliability report](docs/phase6_reliability.md) documents per-engine and RUL-band
+bias, extreme errors, invalid predictions, and a fixed synthetic sensor-noise probe.
+The audit reuses frozen models and saves separate tables/plots without retraining.
+It does not open official test data or produce calibrated uncertainty estimates.
+
+```bash
+PYTHONPATH=src OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 .venv/bin/python -W error -m aevora.audit --config configs/default.toml
+```
+
+Outputs: configured `artifact_dir/reports/FD001/reliability/`. The best aggregate
+model still has meaningful failure cases; use the report alongside overall scores.
