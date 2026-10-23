@@ -178,3 +178,11 @@ findings and data context. Optional operating-hours conversion requires a verifi
 rate supplied by the user. All four models use
 frozen preprocessing. This is NASA demonstration data, not live equipment.
 The dashboard never trains models or reads official test trajectories/targets.
+
+### React + FastAPI interface
+
+The dedicated [web dashboard](docs/web_dashboard.md) adds a React/TypeScript
+interface for fleet overview, engine history, model comparisons and reliability
+findings. It reuses the saved Python models and frozen preprocessing. Run FastAPI
+on port 8000 and Vite on port 5173 using the linked setup instructions. The
+Streamlit prototype above remains available.
