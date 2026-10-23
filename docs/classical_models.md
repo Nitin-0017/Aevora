@@ -49,3 +49,36 @@ starts in the documented commands; no GPU or API key is required.
 ```bash
 PYTHONPATH=src OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 .venv/bin/python -m aevora.training --config configs/default.toml --model gradient_boosting
 ```
+
+## Evaluation contract
+
+`python -m aevora.evaluation --config configs/default.toml` verifies preparation,
+requires identical preparation hashes for all models, checks saved target and
+engine/cycle order, reloads each estimator and verifies its saved predictions and
+metrics. It does not retrain. Reports go under configured
+`artifact_dir/reports/FD001/validation/`: metrics JSON/CSV, per-engine MAE/RMSE,
+RUL-band errors, actual-versus-predicted scatter, residual histograms and engine
+MAE bars. Residual means prediction minus actual; positive is overprediction.
+
+Bands are near failure 0–30 cycles, middle >30–100, and early >100. Labels are
+integer cycles. Empty bands have null metrics, not fabricated zero error.
+MAE averages absolute error; RMSE squares errors before averaging and therefore
+penalizes large misses more strongly. They can rank models differently when one
+has fewer typical errors but some much larger misses. Both have cycle units.
+
+All 3,472 endpoints from 20 validation engines are evaluated with uncapped RUL.
+Overlapping windows are correlated; these are not 3,472 independent engines.
+Longer engines contribute more observations. Per-engine errors and macro MAE
+(equal engine weights) complement pooled metrics. This protocol differs from
+one final endpoint per truncated official test engine. Validation is reused for
+tuning, so scores are optimistic development estimates; there is no confidence
+interval or industrial reliability claim. No imputation, additional scaling or
+calibration is fitted in this phase. Inference needs full available histories
+from cycle 1 and at least 20 cycles per engine, as in Phase 3.
+
+Training times measure estimator `.fit()` only, excluding verification, summary
+construction, prediction and serialization. Search time sums all candidate fits;
+the selected fit is retained without refitting. Commands overwrite each named
+bundle/report; use a separate configured artifact directory to preserve another
+experiment (prepare its Phase 3 artifacts first). Git ignores generated data,
+models and reports; the small reviewed findings document records this run.

@@ -1,7 +1,7 @@
 # Planned engineering contracts
 
-These contracts guide the project. Phases 1–3 implement data preparation only;
-model training and evaluation remain future work.
+These contracts guide the project. Phases 1–4 implement data preparation and
+classical model development. Final test evaluation and LSTM remain future work.
 
 ## Data and labels
 

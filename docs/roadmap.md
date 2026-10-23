@@ -2,7 +2,7 @@
 
 Target about 30 substantive commits; never pad history. Each phase begins with
 status inspection and ends with relevant checks, diff review, reporting and user
-approval. Phases 1–3 are implemented; subsequent work requires approval.
+approval. Phases 1–4 are implemented; subsequent work requires approval.
 
 | Phase | Scope | Target commits |
 | --- | --- | --- |
@@ -43,7 +43,13 @@ training-only EDA are implemented. See `dataset.md`, `eda.md`, and
 RUL labels, deterministic engine split, training-fitted scaling, causal rolling
 features and 20-cycle windows are implemented. See `preparation.md`.
 
-## Phase 4 gate
+## Phase 4 implementation
 
-Wait for explicit approval before training baseline, Ridge or boosted-tree models.
+Median baseline, Ridge and histogram boosted trees share verified historical
+summary features and validation endpoints. See `classical_models.md` and
+`phase4_findings.md` for inference, tuning rules and measured errors.
+
+## Phase 5 gate
+
+Wait for explicit approval before implementing or training an LSTM.
 Official test targets remain sealed until final evaluation.

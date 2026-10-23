@@ -9,11 +9,12 @@ Simulation results do not demonstrate factory savings or industrial reliability.
 
 ## Current status
 
-Phases 1–3: foundation, ingestion/validation, training-only EDA, and leakage-safe
-training-data preparation.
+Phases 1–4: foundation, ingestion/validation, training-only EDA, leakage-safe
+data preparation, and classical model training and comparison.
 The NASA-linked FD001 training/test files are available locally. Official RUL
-targets remain unextracted in the downloaded archive. No model has been trained.
-The dashboard and all prediction functionality are planned, not implemented.
+targets remain unextracted in the downloaded archive. Median baseline, Ridge and
+boosted-tree models are trained locally with reusable saved-bundle inference.
+LSTM, final test evaluation and the dashboard remain planned.
 
 ## Setup
 
@@ -48,7 +49,7 @@ NASA C-MAPSS FD001 files
     -> validated loader and engine-based development split
     -> causal rolling features / historical sequence windows
     -> training-only preprocessing
-    -> mean baseline, Ridge, gradient boosting, small LSTM
+    -> median baseline, Ridge, gradient boosting, small LSTM
     -> shared inference interface and saved artifacts
     -> development evaluation / final official test evaluation
     -> robustness studies and Streamlit dashboard
@@ -123,3 +124,18 @@ trained. Saved preprocessing is reused by `prepare_inference` without refitting.
 See [preparation rules](docs/preparation.md) for formulas, early-history behavior,
 artifact usage and limitations, and [Phase 3 verification](docs/phase3_verification.md)
 for the measured preparation counts. Generated arrays remain local and ignored.
+
+## Phase 4: classical models
+
+See [training and inference](docs/classical_models.md) for commands, feature
+representation and artifacts, and [measured results](docs/phase4_findings.md) for
+validation errors and limitations. After training all three models:
+
+```bash
+PYTHONPATH=src OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 .venv/bin/python -m aevora.evaluation --config configs/default.toml
+```
+
+This compares saved models without retraining and writes metrics, error tables
+and plots to configured `artifact_dir/reports/FD001/validation/`. Validation was
+used for model selection; these are not final test scores. Large generated
+models and arrays remain local and ignored by Git.
