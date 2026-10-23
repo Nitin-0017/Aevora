@@ -4,7 +4,7 @@ dataset = "FD001"
 raw_data_dir = "data/raw/CMAPSSData"
 artifact_dir = "artifacts"
 random_seed = 42
-sequence_window = 30
+sequence_window = 20
 validation_fraction = 0.2
 rolling_window = 5
 # Omit rul_cap for uncapped targets; enable only for a documented experiment.

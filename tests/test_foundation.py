@@ -22,7 +22,7 @@ class FoundationTests(unittest.TestCase):
         settings = load_config(CONFIG)
         self.assertEqual(settings.project_root, ROOT)
         self.assertEqual(settings.random_seed, 42)
-        self.assertEqual(settings.sequence_window, 30)
+        self.assertEqual(settings.sequence_window, 20)
         self.assertEqual(settings.train_path.name, "train_FD001.txt")
         self.assertEqual(settings.test_path.name, "test_FD001.txt")
         self.assertEqual(settings.test_targets_path.name, "RUL_FD001.txt")
@@ -31,7 +31,7 @@ class FoundationTests(unittest.TestCase):
     def test_invalid_settings(self):
         cases = [
             ('dataset = "FD001"', 'dataset = "FD002"'),
-            ('sequence_window = 30', 'sequence_window = 0'),
+            ('sequence_window = 20', 'sequence_window = 0'),
             ('random_seed = 42', 'random_seed = true'),
             ('validation_fraction = 0.2', 'validation_fraction = 1.0'),
             ('validation_fraction = 0.2', 'validation_fraction = nan'),
@@ -41,7 +41,7 @@ class FoundationTests(unittest.TestCase):
             ('device = "cpu"', 'device = "cuda"'),
             ('learning_rate = 0.001', 'learning_rate = 0'),
             ('hidden_size = 32', 'hidden_size = 0'),
-            ('sequence_window = 30', 'window_typo = 30'),
+            ('sequence_window = 20', 'window_typo = 30'),
         ]
         for old, new in cases:
             with self.subTest(setting=new), tempfile.TemporaryDirectory() as temp:

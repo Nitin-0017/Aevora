@@ -2,7 +2,7 @@
 
 Target about 30 substantive commits; never pad history. Each phase begins with
 status inspection and ends with relevant checks, diff review, reporting and user
-approval. Phases 1 and 2 are implemented; subsequent work requires approval.
+approval. Phases 1–3 are implemented; subsequent work requires approval.
 
 | Phase | Scope | Target commits |
 | --- | --- | --- |
@@ -38,7 +38,12 @@ Acquisition documentation, strict loader and quality reports, fixture tests, and
 training-only EDA are implemented. See `dataset.md`, `eda.md`, and
 `phase2_findings.md`. Four substantive Phase 2 commits capture this work.
 
-## Phase 3 gate
+## Phase 3 implementation
 
-Wait for explicit approval before adding labels, splits, preprocessing, or
-features. Official test targets remain sealed until final evaluation.
+RUL labels, deterministic engine split, training-fitted scaling, causal rolling
+features and 20-cycle windows are implemented. See `preparation.md`.
+
+## Phase 4 gate
+
+Wait for explicit approval before training baseline, Ridge or boosted-tree models.
+Official test targets remain sealed until final evaluation.

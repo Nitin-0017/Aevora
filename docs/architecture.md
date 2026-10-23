@@ -1,6 +1,7 @@
 # Planned engineering contracts
 
-These contracts guide future phases; Phase 1 does not implement ML pipelines.
+These contracts guide the project. Phases 1–3 implement data preparation only;
+model training and evaluation remain future work.
 
 ## Data and labels
 

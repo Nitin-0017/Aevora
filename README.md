@@ -9,7 +9,8 @@ Simulation results do not demonstrate factory savings or industrial reliability.
 
 ## Current status
 
-Phases 1–2: foundation, strict dataset ingestion/validation, and training-only EDA.
+Phases 1–3: foundation, ingestion/validation, training-only EDA, and leakage-safe
+training-data preparation.
 The NASA-linked FD001 training/test files are available locally. Official RUL
 targets remain unextracted in the downloaded archive. No model has been trained.
 The dashboard and all prediction functionality are planned, not implemented.
@@ -107,3 +108,18 @@ Reports go to `<artifact_dir>/reports/FD001/train/`; change `artifact_dir` in th
 existing TOML config to relocate them. All EDA statistics use training data only.
 Loader tests use small artificial temporary fixtures; no real data is required
 for tests. The plotting integration test skips explicitly if Matplotlib is absent.
+
+## Phase 3: prepare model inputs
+
+```bash
+PYTHONPATH=src .venv/bin/python -m aevora.prepare --config configs/default.toml --save-arrays
+```
+
+This reads only official training histories, splits by engine, creates RUL labels,
+selects nonconstant sensors on training engines, engineers historical features,
+fits training-only scaling, and builds 20-cycle windows. No predictive model is
+trained. Saved preprocessing is reused by `prepare_inference` without refitting.
+
+See [preparation rules](docs/preparation.md) for formulas, early-history behavior,
+artifact usage and limitations, and [Phase 3 verification](docs/phase3_verification.md)
+for the measured preparation counts. Generated arrays remain local and ignored.
