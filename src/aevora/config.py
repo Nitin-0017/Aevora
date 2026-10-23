@@ -76,7 +76,13 @@ def load_config(path: str | Path) -> Settings:
     }
     if not isinstance(models, dict) or set(models) != set(schemas):
         raise ValueError("models must define baseline, ridge, gradient_boosting, and lstm")
-    integer_keys = {"max_iter", "max_leaf_nodes", "hidden_size", "num_layers", "batch_size", "max_epochs", "patience"}
+    # Optional Phase 5 knobs preserve older configuration files.
+    lstm_defaults = {"dropout": 0.1, "gradient_clip": 1.0, "min_delta": 0.0, "num_threads": 2}
+    if isinstance(models["lstm"], dict):
+        for key, value in lstm_defaults.items():
+            models["lstm"].setdefault(key, value)
+    schemas["lstm"] |= set(lstm_defaults)
+    integer_keys = {"max_iter", "max_leaf_nodes", "hidden_size", "num_layers", "batch_size", "max_epochs", "patience", "num_threads"}
     for name, keys in schemas.items():
         if not isinstance(models[name], dict) or set(models[name]) != keys:
             raise ValueError(f"Invalid settings for {name}")
@@ -87,6 +93,8 @@ def load_config(path: str | Path) -> Settings:
             if key == "max_leaf_nodes":
                 minimum = 2
             _number(value, f"{name}.{key}", integer=key in integer_keys, minimum=minimum)
+    if not 0 <= models["lstm"]["dropout"] < 1 or models["lstm"]["gradient_clip"] <= 0:
+        raise ValueError("LSTM dropout must be in [0,1) and gradient_clip positive")
     if models["baseline"]["strategy"] != "median":
         raise ValueError("The initial baseline strategy must be median")
     if models["lstm"]["device"] != "cpu":
