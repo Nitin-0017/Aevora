@@ -35,3 +35,16 @@ As with any API, the caller must supply an honest training-ID declaration.
 Shared history validation rejects duplicate keys, gaps, invalid IDs and nonfinite
 features. It sorts a copy by engine/cycle and permits partial histories starting
 after cycle 1; callers align targets by keys rather than DataFrame row positions.
+
+## Historical features
+
+For each selected sensor, retain its current value and add a trailing mean,
+population standard deviation (ddof=0), one-cycle change, and least-squares slope
+against cycle position. `rolling_window` defaults to 5. The slope is in sensor
+units per cycle. Consecutive cycles are required. Output is sorted by engine/cycle.
+
+Early cycles use only available past/current readings (min_periods=1). The first
+observation has zero standard deviation, change and slope. There is no backward
+fill, centered window, future reading, or cross-engine context. At inference,
+provide the full available history from cycle 1 so early-window conventions
+match training. A changing feature is not proof of a physical failure mechanism.
