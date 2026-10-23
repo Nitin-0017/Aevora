@@ -1,0 +1,30 @@
+# Paths are relative to this file's parent directory (.. = repository root).
+project_root = ".."
+dataset = "FD001"
+raw_data_dir = "data/raw/CMAPSSData"
+artifact_dir = "artifacts"
+random_seed = 42
+sequence_window = 30
+validation_fraction = 0.2
+
+[models.baseline]
+strategy = "mean"
+
+[models.ridge]
+alpha = 1.0
+
+[models.gradient_boosting]
+learning_rate = 0.05
+max_iter = 200
+max_leaf_nodes = 15
+l2_regularization = 1.0
+
+[models.lstm]
+hidden_size = 32
+num_layers = 1
+batch_size = 64
+learning_rate = 0.001
+weight_decay = 0.0001
+max_epochs = 30
+patience = 5
+device = "cpu"
