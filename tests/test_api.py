@@ -102,3 +102,28 @@ class APITests(unittest.TestCase):
         self.assertEqual(good.headers['access-control-allow-origin'],'http://127.0.0.1:5173')
         bad=self.client.options('/api/predict',headers={'Origin':'https://unrelated.example','Access-Control-Request-Method':'POST'})
         self.assertNotIn('access-control-allow-origin',bad.headers)
+
+    def test_release_prediction_and_sensor_parity_across_engines(self):
+        from aevora.dashboard.data import engine_history, infer_history, load_predictor
+        for engine in self.service.engines()[:3]:
+            engine_id = engine['engine_id']
+            history = engine_history(self.service.snapshot.raw, engine_id, 100)
+            sensor = self.client.get(
+                f'/api/engines/{engine_id}/history?cycle=100&sensor=sensor_2'
+            ).json()['readings']
+            self.assertEqual([r['cycle'] for r in sensor], history.cycle.tolist())
+            self.assertEqual([r['value'] for r in sensor], history.sensor_2.tolist())
+            for model in ('baseline', 'ridge', 'gradient_boosting', 'lstm'):
+                with self.subTest(engine=engine_id, model=model):
+                    response = self.client.post('/api/predict', json={
+                        'engine_id': engine_id, 'model': model, 'cycle': 100,
+                    })
+                    self.assertEqual(response.status_code, 200, response.text)
+                    row = response.json()['predictions'][0]
+                    direct = infer_history(self.service.snapshot, model,
+                        load_predictor(self.service.snapshot, model), history)
+                    self.assertAlmostEqual(row['raw_rul'], direct.predicted_rul.iloc[0], places=5)
+                    self.assertEqual(row['engine_id'], engine_id)
+                    self.assertEqual(row['model'], model)
+                    self.assertEqual(row['latest_cycle'], int(history.cycle.max()))
+        self.assertEqual(self.hashes, input_fingerprints(self.service.snapshot.settings))

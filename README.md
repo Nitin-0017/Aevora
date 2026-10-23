@@ -2,187 +2,142 @@
 
 **Intelligence Before Failure.**
 
-AEVORA is a research prototype for estimating simulated turbofan engine Remaining
-Useful Life (RUL), in operating cycles, from historical sensor measurements.
-It will help explore inspection prioritization, not authorize maintenance actions.
-Simulation results do not demonstrate factory savings or industrial reliability.
+AEVORA estimates turbofan Remaining Useful Life (RUL) in operating cycles from
+historical sensor measurements. It explores how maintenance teams could review
+concerning estimates and prioritize inspection. It is a **research demonstration
+on NASA C-MAPSS FD001**, not a live fleet or a validated maintenance system.
 
-## Current status
+The React dashboard connects to a FastAPI service that runs existing saved Python
+models with frozen training-time preprocessing. It never trains on a dashboard
+request. The original Streamlit prototype remains available.
 
-Phases 1–7: foundation, ingestion/validation, training-only EDA, leakage-safe
-data preparation, classical models, a tested CPU LSTM, a validation reliability audit, and an offline Streamlit dashboard.
-The NASA-linked FD001 training/test files are available locally. Official RUL
-targets remain unextracted in the downloaded archive. Median baseline, Ridge and
-boosted-tree and LSTM models are trained locally with reusable saved-bundle inference.
-Final official test evaluation remains planned. The dashboard uses validation-engine replay only.
+## Verified development-validation results
 
-## Setup
+All four models use the same **3,472 observations from 20 validation engines**.
+Values below were rechecked from saved endpoint predictions and labels during
+Phase 8. Training uses 80 separate engines; overlapping windows are correlated.
 
-Use Python 3.11 or newer. Initial foundation checks ran on Python 3.13.1.
-From the repository directory:
+| Model | MAE (cycles) | RMSE (cycles) | R² | Within ±10 cycles | Within ±20 cycles |
+|---|---:|---:|---:|---:|---:|
+| Median baseline | 46.41 | 54.85 | -0.013 | 12.10% | 23.62% |
+| Ridge | 27.48 | 33.60 | 0.620 | 22.21% | 42.80% |
+| Boosted trees | 20.54 | 28.72 | 0.722 | 42.08% | 62.24% |
+| LSTM | 23.11 | 32.26 | 0.650 | 38.62% | 59.39% |
+
+Boosted trees have the best aggregate MAE/RMSE in this development run, but mean
+overprediction is **9.83 cycles** and the largest overprediction is **108.47
+cycles**. Ridge produced 207 negative estimates; boosted trees produced 10.
+Negative outputs are retained in evaluation and marked invalid in the UI.
+
+Validation was used for model selection and LSTM early stopping. These are
+**not independent test results** and do not establish production readiness.
+Official test RUL targets have not been used in this release audit. R² is not
+classification accuracy. See the [performance audit](docs/model_performance_audit.md)
+and [reliability findings](docs/phase6_reliability.md).
+
+## Architecture
+
+```mermaid
+flowchart LR
+    D[FD001 training trajectories] --> P[Engine split and frozen preprocessing]
+    P --> W[20 timestep × 75 feature windows]
+    W --> C[225 summary features: baseline, Ridge, boosted trees]
+    W --> L[32 hidden unit LSTM]
+    C --> B[Saved model bundles and verified reports]
+    L --> B
+    B --> A[FastAPI: validated inference and sensor history]
+    A --> R[React + TypeScript + Vite dashboard]
+    B --> S[Streamlit prototype]
+```
+
+Pages: Overview, Engine Explorer, Model Comparison, Reliability Insights and Data
+Information. Engine/model selection, Run prediction, real sensor-history charts,
+raw RUL, qualified guidance, and loading/error states use actual backend data.
+The turbine picture is explicitly labelled AI-generated illustrative imagery.
+Status thresholds are editable demonstration bands, not validated safety limits.
+Hours conversion is optional and requires a user-supplied verified operating rate.
+
+## Install and run
+
+From a checkout of this repository:
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -e '.[dev]'
-python -m aevora --config configs/default.toml
-python -m pytest
+.venv/bin/python -m pip install -e '.[api,dev]'
+cd frontend
+npm ci
+cd ..
 ```
 
-`pyproject.toml` is the dependency source of truth. Installation requires network
-access and compatible wheels. The full ML stack has not yet been installed or
-verified together; version ranges are not a reproducible lockfile. After resolving
-the environment, record exact versions with `python -m pip freeze` alongside each
-experiment. CPU is the initial device; no API key or paid service is needed.
+Python requirement: **3.11+**. Vite requires **Node 20.19+ within Node 20, or
+Node 22.12+**. This checkout was tested with Python 3.13.1 and Node 25.2.0.
+`pyproject.toml` supplies Python dependency ranges; `frontend/package-lock.json`
+locks frontend dependencies. A fresh-machine installation has not been verified.
+See the [release report](docs/release_readiness.md) for the observed environment.
 
-To check the foundation without installing dependencies:
+**A checkout alone cannot run inference.** Restore the matching trusted local
+Phase 3–6 model/preprocessing/report bundle under `artifacts/` and FD001 training
+trajectories under `data/raw/CMAPSSData/`. These are intentionally Git-ignored.
+See [artifact setup](docs/release_readiness.md#artifact-setup) for restoration and
+explicit regeneration instructions. No API keys or cloud services are required.
+
+Terminal 1, repository root:
 
 ```bash
-PYTHONPATH=src python3 -m unittest discover -s tests -v
-PYTHONPATH=src python3 -m aevora --config configs/default.toml
+PYTHONPATH=src OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 .venv/bin/python -m uvicorn aevora.api.app:app --host 127.0.0.1 --port 8000
 ```
 
-## Planned architecture
-
-```text
-NASA C-MAPSS FD001 files
-    -> validated loader and engine-based development split
-    -> causal rolling features / historical sequence windows
-    -> training-only preprocessing
-    -> median baseline, Ridge, gradient boosting, small LSTM
-    -> shared inference interface and saved artifacts
-    -> development evaluation / final official test evaluation
-    -> robustness studies and Streamlit dashboard
-```
-
-The configuration defines seed, paths, validation fraction, sequence length, and
-initial model settings. These are starting choices, not tuned results. Dataset
-paths resolve against the configuration's project root, not the shell directory.
-The configuration checker never opens dataset files, including official targets.
-
-## Repository layout
-
-```text
-configs/default.toml      Central configuration
-src/aevora/              Package and configuration-check CLI
-tests/                   Foundation tests (unittest and pytest compatible)
-docs/architecture.md     Evaluation and implementation contracts
-docs/roadmap.md          Phase gates and proposed commit boundaries
-data/                    Future local datasets; ignored by Git
-artifacts/               Future models/reports; ignored by Git
-```
-
-Data and EDA artifact directories are populated locally and ignored by Git.
-Future selected evaluation summaries may be committed under documentation after
-review. Raw data, fitted artifacts, environments and secrets stay out of Git.
-
-## Development protocol
-
-Split by engine; never randomly split overlapping windows across train/validation.
-Use only present/past readings for predictions. Learn preprocessing only from the
-training partition. Select models and hyperparameters using development data.
-Keep official test targets sealed until final evaluation, with frozen settings.
-
-See [architecture](docs/architecture.md) and [roadmap](docs/roadmap.md).
-Each phase ends with tests, a diff review, and user approval before the next phase.
-
-## GitHub
-
-The repository uses `main` and has an existing `origin` remote. Phase work is
-committed locally; pushing requires explicit approval. Never commit datasets or keys.
-
-## Phase 2: validation and EDA
-
-See [dataset acquisition](docs/dataset.md), [EDA usage](docs/eda.md), and
-[observed findings](docs/phase2_findings.md). Minimal Phase 2 setup (no PyTorch):
+Terminal 2, repository root:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install 'numpy>=1.26,<3' 'pandas>=2.2,<3' 'matplotlib>=3.8,<4'
-PYTHONPATH=src python -m unittest discover -s tests -v
-PYTHONPATH=src python -m aevora.data --config configs/default.toml --split train
-PYTHONPATH=src python -m aevora.eda --config configs/default.toml
+cd frontend
+npm run dev
 ```
 
-Reports go to `<artifact_dir>/reports/FD001/train/`; change `artifact_dir` in the
-existing TOML config to relocate them. All EDA statistics use training data only.
-Loader tests use small artificial temporary fixtures; no real data is required
-for tests. The plotting integration test skips explicitly if Matplotlib is absent.
+Open **http://127.0.0.1:5173**. Health: **http://127.0.0.1:8000/api/health**.
+Vite forwards `/api` requests to port 8000. Models and assets work offline after
+installation. These are local development servers; the static production build
+alone does not configure a production API proxy. Full endpoint documentation and
+troubleshooting: [web dashboard guide](docs/web_dashboard.md).
 
-## Phase 3: prepare model inputs
-
-```bash
-PYTHONPATH=src .venv/bin/python -m aevora.prepare --config configs/default.toml --save-arrays
-```
-
-This reads only official training histories, splits by engine, creates RUL labels,
-selects nonconstant sensors on training engines, engineers historical features,
-fits training-only scaling, and builds 20-cycle windows. No predictive model is
-trained. Saved preprocessing is reused by `prepare_inference` without refitting.
-
-See [preparation rules](docs/preparation.md) for formulas, early-history behavior,
-artifact usage and limitations, and [Phase 3 verification](docs/phase3_verification.md)
-for the measured preparation counts. Generated arrays remain local and ignored.
-
-## Phase 4: classical models
-
-See [training and inference](docs/classical_models.md) for commands, feature
-representation and artifacts, and [measured results](docs/phase4_findings.md) for
-validation errors and limitations. After training all three models:
+Optional Streamlit prototype:
 
 ```bash
-PYTHONPATH=src OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 .venv/bin/python -m aevora.evaluation --config configs/default.toml
-```
-
-This compares saved models without retraining and writes metrics, error tables
-and plots to configured `artifact_dir/reports/FD001/validation/`. Validation was
-used for model selection; these are not final test scores. Large generated
-models and arrays remain local and ignored by Git.
-
-## Phase 5: LSTM
-
-See [LSTM training and inference](docs/lstm.md) and [measured Phase 5 results](docs/phase5_findings.md).
-The single-layer CPU LSTM uses the same 20 × 75 sequences and validation endpoints.
-It did not beat boosted trees in this run; the best checkpoint is restored after
-early stopping. Training curves, per-engine errors and four-model comparisons
-are saved locally. No official test RUL targets have been used.
-
-## Phase 6: reliability audit
-
-The [reliability report](docs/phase6_reliability.md) documents per-engine and RUL-band
-bias, extreme errors, invalid predictions, and a fixed synthetic sensor-noise probe.
-The audit reuses frozen models and saves separate tables/plots without retraining.
-It does not open official test data or produce calibrated uncertainty estimates.
-
-```bash
-PYTHONPATH=src OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 .venv/bin/python -W error -m aevora.audit --config configs/default.toml
-```
-
-Outputs: configured `artifact_dir/reports/FD001/reliability/`. The best aggregate
-model still has meaningful failure cases; use the report alongside overall scores.
-
-## Phase 7: interactive dashboard
-
-```bash
-cd /Users/nitinkumar/Documents/Codex/2026-10-23/he/outputs/aevora
 OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 .venv/bin/python -m streamlit run dashboard.py --server.address 127.0.0.1
 ```
 
-Open http://127.0.0.1:8501. See [dashboard setup and verification](docs/dashboard.md)
-for required local artifacts, cache behavior, risk-band definitions and manual checks.
-The default Machine overview explains estimated remaining life and the suggested
-next step in plain language. Select an engine and model, then choose Run prediction.
-Technical details retains fleet replay, engine sensors, model comparison, reliability
-findings and data context. Optional operating-hours conversion requires a verified
-rate supplied by the user. All four models use
-frozen preprocessing. This is NASA demonstration data, not live equipment.
-The dashboard never trains models or reads official test trajectories/targets.
+## Verification
 
-### React + FastAPI interface
+```bash
+PYTHONPATH=src OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 .venv/bin/python -W error -m unittest discover -s tests -v
+npm test --prefix frontend
+npm run build --prefix frontend
+npm run format --prefix frontend
+```
 
-The dedicated [web dashboard](docs/web_dashboard.md) adds a React/TypeScript
-interface for fleet overview, engine history, model comparisons and reliability
-findings. It reuses the saved Python models and frozen preprocessing. Run FastAPI
-on port 8000 and Vite on port 5173 using the linked setup instructions. The
-Streamlit prototype above remains available.
+Build includes strict TypeScript checks; formatting uses Prettier. ESLint is not
+configured. Some Python integration tests require the local audited bundle and
+explicitly skip when absent. Tests train small synthetic fixtures only; the
+release audit does not retrain benchmark models.
+
+Read [Phase 8 evidence and release checklist](docs/release_readiness.md) before
+claiming full end-to-end verification. Live server/browser checks remain manual
+where sandbox restrictions prohibit opening local ports. No mockup is presented
+as an application screenshot.
+
+## Repository and further reading
+
+- `frontend/`: React UI, local brand assets and UI tests.
+- `src/aevora/api/`: FastAPI routes and artifact-backed service.
+- `src/aevora/`: data validation, features, preprocessing, models and audits.
+- `configs/default.toml`: paths, seed, split and model configuration.
+- `tests/`: Python unit and integration tests.
+- `data/`, `artifacts/`: local, ignored data and model/report bundles.
+- [Dataset acquisition](docs/dataset.md), [preparation](docs/preparation.md),
+  [classical models](docs/classical_models.md), [LSTM](docs/lstm.md),
+  [architecture contracts](docs/architecture.md).
+
+Before industrial use, evaluate frozen choices on untouched data, assess engine-
+level uncertainty, validate on representative field equipment, calibrate any
+operational thresholds, and establish human review, monitoring and security.
+The current noise probe is sensitivity analysis, not calibrated uncertainty.

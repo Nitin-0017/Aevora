@@ -1,0 +1,266 @@
+{
+  "scope": "In-process TestClient; not live HTTP/browser E2E",
+  "metrics": [
+    {
+      "model": "baseline",
+      "engines": 20,
+      "observations": 3472,
+      "negative_pct": 0.0,
+      "nonfinite_pct": 0.0,
+      "within_5_pct": 6.336405529953917,
+      "within_10_pct": 12.096774193548388,
+      "within_20_pct": 23.617511520737327,
+      "within_30_pct": 34.90783410138249,
+      "mae": 46.414746543778804,
+      "rmse": 54.84632909929527,
+      "r2": -0.012607315240142,
+      "median_absolute_error": 44.0,
+      "mean_signed_error": 6.119815668202765,
+      "max_absolute_error": 154.0,
+      "p90_absolute_error": 86.0,
+      "p95_absolute_error": 92.0,
+      "mae_improvement_vs_baseline_pct": 0.0,
+      "best_alternative": "gradient_boosting",
+      "mae_improvement_vs_best_alternative_pct": -126.01963181858316
+    },
+    {
+      "model": "ridge",
+      "engines": 20,
+      "observations": 3472,
+      "negative_pct": 5.961981566820277,
+      "nonfinite_pct": 0.0,
+      "within_5_pct": 10.829493087557603,
+      "within_10_pct": 22.206221198156683,
+      "within_20_pct": 42.79953917050691,
+      "within_30_pct": 60.10944700460829,
+      "mae": 27.47919439511532,
+      "rmse": 33.59860508805872,
+      "r2": 0.61999577584582,
+      "median_absolute_error": 24.073866391548364,
+      "mean_signed_error": 11.729991460481294,
+      "max_absolute_error": 96.25508951341976,
+      "p90_absolute_error": 54.804098622916165,
+      "p95_absolute_error": 63.037724192770725,
+      "mae_improvement_vs_baseline_pct": 40.79641398192986,
+      "best_alternative": "gradient_boosting",
+      "mae_improvement_vs_best_alternative_pct": -33.811727141440315
+    },
+    {
+      "model": "gradient_boosting",
+      "engines": 20,
+      "observations": 3472,
+      "negative_pct": 0.288018433179724,
+      "nonfinite_pct": 0.0,
+      "within_5_pct": 25.086405529953918,
+      "within_10_pct": 42.0794930875576,
+      "within_20_pct": 62.24078341013825,
+      "within_30_pct": 73.21428571428571,
+      "mae": 20.5357146059923,
+      "rmse": 28.717120578983955,
+      "r2": 0.722394725549079,
+      "median_absolute_error": 13.329113701026671,
+      "mean_signed_error": 9.834227387515481,
+      "max_absolute_error": 108.46605127877851,
+      "p90_absolute_error": 49.07699065295442,
+      "p95_absolute_error": 60.33661116073934,
+      "mae_improvement_vs_baseline_pct": 55.756055703928425,
+      "best_alternative": "lstm",
+      "mae_improvement_vs_best_alternative_pct": 11.146426348962398
+    },
+    {
+      "model": "lstm",
+      "engines": 20,
+      "observations": 3472,
+      "negative_pct": 0.0,
+      "nonfinite_pct": 0.0,
+      "within_5_pct": 20.650921658986174,
+      "within_10_pct": 38.62327188940092,
+      "within_20_pct": 59.38940092165899,
+      "within_30_pct": 71.4573732718894,
+      "mae": 23.111861191586964,
+      "rmse": 32.25683886559785,
+      "r2": 0.649740809630427,
+      "median_absolute_error": 14.463958740234375,
+      "mean_signed_error": 12.079990905550767,
+      "max_absolute_error": 110.50753784179688,
+      "p90_absolute_error": 57.30241394042969,
+      "p95_absolute_error": 70.44057197570801,
+      "mae_improvement_vs_baseline_pct": 50.205779601128164,
+      "best_alternative": "gradient_boosting",
+      "mae_improvement_vs_best_alternative_pct": -12.544713612463953
+    }
+  ],
+  "prediction_checks": [
+    {
+      "engine": 3,
+      "model": "baseline",
+      "cycle": 100,
+      "raw_rul": 95.0
+    },
+    {
+      "engine": 3,
+      "model": "ridge",
+      "cycle": 100,
+      "raw_rul": 106.02509561806147
+    },
+    {
+      "engine": 3,
+      "model": "gradient_boosting",
+      "cycle": 100,
+      "raw_rul": 122.08812179765124
+    },
+    {
+      "engine": 3,
+      "model": "lstm",
+      "cycle": 100,
+      "raw_rul": 131.05052185058594
+    },
+    {
+      "engine": 5,
+      "model": "baseline",
+      "cycle": 100,
+      "raw_rul": 95.0
+    },
+    {
+      "engine": 5,
+      "model": "ridge",
+      "cycle": 100,
+      "raw_rul": 160.03030574258827
+    },
+    {
+      "engine": 5,
+      "model": "gradient_boosting",
+      "cycle": 100,
+      "raw_rul": 167.17888584735198
+    },
+    {
+      "engine": 5,
+      "model": "lstm",
+      "cycle": 100,
+      "raw_rul": 143.46853637695312
+    },
+    {
+      "engine": 19,
+      "model": "baseline",
+      "cycle": 100,
+      "raw_rul": 95.0
+    },
+    {
+      "engine": 19,
+      "model": "ridge",
+      "cycle": 100,
+      "raw_rul": 93.76596590676928
+    },
+    {
+      "engine": 19,
+      "model": "gradient_boosting",
+      "cycle": 100,
+      "raw_rul": 35.1446798481655
+    },
+    {
+      "engine": 19,
+      "model": "lstm",
+      "cycle": 100,
+      "raw_rul": 65.42100524902344
+    }
+  ],
+  "sensor_histories_verified": 3,
+  "unchanged_artifact_hashes": 33,
+  "reliability": {
+    "mean_bias": 9.834227387515481,
+    "middle_bias": 19.985449542398538,
+    "largest_overprediction": 108.46605127877851,
+    "p95_absolute_error": 60.33661116073934,
+    "negative_predictions": [
+      {
+        "model": "baseline",
+        "count": 0
+      },
+      {
+        "model": "ridge",
+        "count": 207
+      },
+      {
+        "model": "gradient_boosting",
+        "count": 10
+      },
+      {
+        "model": "lstm",
+        "count": 0
+      }
+    ],
+    "noise_probe": [
+      {
+        "model": "baseline",
+        "observations": 3472,
+        "noise_fraction": 0.01,
+        "seed": 42,
+        "mean_absolute_prediction_change": 0.0,
+        "p95_absolute_prediction_change": 0.0,
+        "max_absolute_prediction_change": 0.0,
+        "fraction_change_over_5_cycles": 0.0,
+        "perturbed_mae": 46.414746543778804,
+        "perturbed_rmse": 54.84632909929527,
+        "mae_change": 0.0
+      },
+      {
+        "model": "ridge",
+        "observations": 3472,
+        "noise_fraction": 0.01,
+        "seed": 42,
+        "mean_absolute_prediction_change": 0.547850156271871,
+        "p95_absolute_prediction_change": 1.30238476179025,
+        "max_absolute_prediction_change": 2.436552070532429,
+        "fraction_change_over_5_cycles": 0.0,
+        "perturbed_mae": 27.44117150432406,
+        "perturbed_rmse": 33.543482425235375,
+        "mae_change": -0.038022890791261
+      },
+      {
+        "model": "gradient_boosting",
+        "observations": 3472,
+        "noise_fraction": 0.01,
+        "seed": 42,
+        "mean_absolute_prediction_change": 1.20371597039991,
+        "p95_absolute_prediction_change": 4.186140819615127,
+        "max_absolute_prediction_change": 16.54003132753563,
+        "fraction_change_over_5_cycles": 0.032834101382488,
+        "perturbed_mae": 20.49990178478513,
+        "perturbed_rmse": 28.683542472036738,
+        "mae_change": -0.03581282120717
+      },
+      {
+        "model": "lstm",
+        "observations": 3472,
+        "noise_fraction": 0.01,
+        "seed": 42,
+        "mean_absolute_prediction_change": 0.288312470308647,
+        "p95_absolute_prediction_change": 0.788290405273437,
+        "max_absolute_prediction_change": 1.833244323730469,
+        "fraction_change_over_5_cycles": 0.0,
+        "perturbed_mae": 23.095928671173237,
+        "perturbed_rmse": 32.23303693720735,
+        "mae_change": -0.015932520413728
+      }
+    ],
+    "perturbation": {
+      "distribution": "independent zero-mean Gaussian noise on selected raw sensors",
+      "scale": "saved training standard deviation of each raw sensor",
+      "fraction": 0.01,
+      "seed": 42,
+      "scope": "synthetic sensitivity probe, not operational failure or uncertainty"
+    },
+    "scope": "Saved 1% synthetic noise sensitivity; not calibrated uncertainty or failure probability."
+  },
+  "versions": {
+    "numpy": "2.4.2",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.6.1",
+    "torch": "2.14.1",
+    "fastapi": "0.136.1",
+    "uvicorn": "0.46.0",
+    "httpx": "0.28.1",
+    "streamlit": "1.54.0",
+    "matplotlib": "3.11.2"
+  }
+}
