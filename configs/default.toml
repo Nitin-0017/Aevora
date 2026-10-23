@@ -6,6 +6,8 @@ artifact_dir = "artifacts"
 random_seed = 42
 sequence_window = 30
 validation_fraction = 0.2
+# Omit rul_cap for uncapped targets; enable only for a documented experiment.
+# rul_cap = 125
 
 [models.baseline]
 strategy = "mean"

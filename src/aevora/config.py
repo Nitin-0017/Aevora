@@ -17,6 +17,7 @@ class Settings:
     sequence_window: int
     validation_fraction: float
     models: dict[str, dict[str, Any]]
+    rul_cap: int | None = None
 
     @property
     def train_path(self) -> Path:
@@ -52,10 +53,12 @@ def load_config(path: str | Path) -> Settings:
         raw = tomllib.load(stream)
     expected = {"project_root", "dataset", "raw_data_dir", "artifact_dir",
                 "random_seed", "sequence_window", "validation_fraction", "models"}
-    if set(raw) != expected:
+    if set(raw) - {"rul_cap"} != expected:
         raise ValueError(f"Config keys mismatch: missing={expected - set(raw)}, unknown={set(raw) - expected}")
     if raw["dataset"] != "FD001":
         raise ValueError("Only FD001 is supported in the initial project")
+    if "rul_cap" in raw:
+        _number(raw["rul_cap"], "rul_cap", integer=True, minimum=1)
     _number(raw["random_seed"], "random_seed", integer=True)
     _number(raw["sequence_window"], "sequence_window", integer=True, minimum=1)
     _number(raw["validation_fraction"], "validation_fraction")
@@ -90,4 +93,4 @@ def load_config(path: str | Path) -> Settings:
                     _path(root, raw["raw_data_dir"], "raw_data_dir"),
                     _path(root, raw["artifact_dir"], "artifact_dir"),
                     raw["random_seed"], raw["sequence_window"],
-                    raw["validation_fraction"], models)
+                    raw["validation_fraction"], models, rul_cap=raw.get("rul_cap"))
